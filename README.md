@@ -17,7 +17,8 @@ This folder contains four datasets for video summarization:
 
 Each dataset follows the same data structure:
 ***********************************************************************************************************************************************
-/key
+  /key
+  
     /features                 2D-array with shape (n_steps, feature-dimension)
                               contains feature vectors representing video frames. Each video frame can be represented by a feature vector (containing some semantic meanings), extracted by a pretrained convolutional neural network (e.g. GoogLeNet).
 
