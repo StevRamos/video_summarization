@@ -4,6 +4,8 @@ To download the raw dataset (SumMe, TVSum, VSumm, CoSum, MVS1K and Visiocity):
   1. `pip3 install gdown`
   2. `gdown https://drive.google.com/uc?id=19XhWuwyA1ahGM8JYxMkvhjTAbel-YBeG`
   3. `unzip datasets.zip`
+  4. `rm datasets.zip`
+  5. `unzip '*.zip'`
 
 # dataset
 
