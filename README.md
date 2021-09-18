@@ -5,7 +5,13 @@ To download the raw dataset (SumMe, TVSum, VSumm, CoSum, MVS1K and Visiocity):
   2. `gdown https://drive.google.com/uc?id=19XhWuwyA1ahGM8JYxMkvhjTAbel-YBeG`
   3. `unzip datasets.zip`
   4. `rm datasets.zip`
-  5. `unzip '*.zip'`
+  5. `unzip CoSum.zip`
+  6. `unzip MVS1K.zip`
+  7. `unzip SumMe.zip -d SumMe`
+  8. `unzip VSUMM.zip`
+  9. `unzip visiocity.zip`
+  10. `mkdir TVsum`
+  11. `tar zxvf tvsum50_ver_1_1.tgz -C TVsum/`
 
 # dataset
 
