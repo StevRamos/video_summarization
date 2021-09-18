@@ -1,4 +1,4 @@
-# video_summarization
+# Video Summarization for Sport Videos
 
 To download the raw dataset (SumMe, TVSum, VSumm, CoSum, MVS1K and Visiocity):
   1. `pip3 install gdown`
