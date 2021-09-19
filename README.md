@@ -4,6 +4,8 @@ To download the raw dataset (SumMe, TVSum, VSumm, CoSum, MVS1K, and Visiocity), 
 
 * `./scripts/downloadDataset.sh`
 
+Manually, this is the link `https://drive.google.com/drive/u/0/folders/1Am_kJm2VRJo4FfMWls039ZdNJVtkVrPN`
+
 # dataset
 
 ################ Instructions ################
