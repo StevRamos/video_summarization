@@ -2,7 +2,7 @@
 
 To download the raw dataset (SumMe, TVSum, VSumm, CoSum, MVS1K, and Visiocity), I used the gshell library. It can be downloaded from pip. Since it has 16GB I recommend using it. Run the following command to get the preprocessed data set.
 
-* ./scripts/downloadDataset.sh
+* `./scripts/downloadDataset.sh`
 
 # dataset
 
