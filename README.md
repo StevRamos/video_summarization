@@ -1,17 +1,8 @@
 # Video Summarization for Sport Videos
 
-To download the raw dataset (SumMe, TVSum, VSumm, CoSum, MVS1K and Visiocity):
-  1. `pip3 install gdown`
-  2. `gdown https://drive.google.com/uc?id=19XhWuwyA1ahGM8JYxMkvhjTAbel-YBeG`
-  3. `unzip datasets.zip`
-  4. `rm datasets.zip`
-  5. `unzip CoSum.zip`
-  6. `unzip MVS1K.zip`
-  7. `unzip SumMe.zip -d SumMe`
-  8. `unzip VSUMM.zip`
-  9. `unzip visiocity.zip`
-  10. `mkdir TVsum`
-  11. `tar zxvf tvsum50_ver_1_1.tgz -C TVsum/`
+To download the raw dataset (SumMe, TVSum, VSumm, CoSum, MVS1K, and Visiocity), I used the gshell library. It can be downloaded from pip. Since it has 16GB I recommend using it. Run the following command to get the preprocessed data set.
+
+* ./scripts/downloadDataset.sh
 
 # dataset
 
@@ -73,4 +64,4 @@ TVSum: video1-50 corresponds to the same order in ydata-tvsum50.mat, which is th
 Note: OVP and YouTube only contain the first three keys, i.e. ['features', 'gtscore', 'gtsummary']
 
 
-# in case doesnt work  pip3 install torch==1.8.0+cu111 torchvision==0.9.0+cu111 torchaudio==0.8.0 -f https://download.pytorch.org/whl/torch_stable.html
+* in case doesnt work  pip3 install torch==1.8.0+cu111 torchvision==0.9.0+cu111 torchaudio==0.8.0 -f https://download.pytorch.org/whl/torch_stable.html
