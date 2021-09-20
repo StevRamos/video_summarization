@@ -1,4 +1,4 @@
-# Video Summarization for Sport Videos
+# Video Summarization of Sports Videos
 
 To download the raw dataset (SumMe, TVSum, VSumm, CoSum, and Visiocity), I used the gshell library. It can be downloaded from pip. Since it has 16GB I recommend using it. Run the following command to get the preprocessed data set.
 

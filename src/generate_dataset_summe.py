@@ -10,7 +10,7 @@
 import os, sys
 #sys.path.append('../')
 #os.chdir('../')
-from networks.CNN import ResNet, GoogleNet
+from models.CNN import ResNet, GoogleNet
 #from utils.KTS.cpd_auto import cpd_auto
 from KTS.cpd_auto import cpd_auto
 
