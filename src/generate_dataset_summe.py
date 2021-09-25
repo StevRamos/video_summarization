@@ -95,17 +95,20 @@ class Generate_Dataset:
 
     def generate_dataset(self):
         for video_idx, video_gt in enumerate(tqdm(zip(self.video_list, self.gt_list), total=len(self.video_list))):
-            video_filename, gt_filename = video_gt
+            video_filename, _ = video_gt
             video_path = video_filename
+            gt_filename = video_filename
             gt_path = gt_filename
 
             if os.path.isdir(self.video_path):
                 video_path = os.path.join(self.video_path, video_filename)
 
-            if os.path.isdir(self.gt_path):
-                gt_path = os.path.join(self.gt_path, gt_filename)
+            video_basename = ".".join(os.path.basename(video_path).split('.')[:-1])
 
-            video_basename = os.path.basename(video_path).split('.')[0]
+            if os.path.isdir(self.gt_path):
+                gt_path = os.path.join(self.gt_path, video_basename + ".mat")
+
+            
 
             if not os.path.exists(os.path.join(self.frame_root_path, video_basename)):
                 os.mkdir(os.path.join(self.frame_root_path, video_basename))

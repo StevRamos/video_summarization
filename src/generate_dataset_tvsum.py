@@ -142,7 +142,7 @@ class Generate_Dataset:
             if os.path.isdir(self.video_path):
                     video_path = os.path.join(self.video_path, video_filename)
             
-            video_basename = os.path.basename(video_path).split('.')[0]
+            video_basename = ".".join(os.path.basename(video_path).split('.')[:-1])
                 
             if self.dataset=='summe':
                 if os.path.isdir(self.gt_path):

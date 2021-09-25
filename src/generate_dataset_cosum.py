@@ -21,6 +21,7 @@ import cv2
 import numpy as np
 import h5py
 import scipy.io
+import pandas as pd
 
 def array_to_id(number_array):
     number_array = number_array.squeeze()
@@ -65,15 +66,15 @@ class Generate_Dataset:
         if os.path.isdir(video_path):
             self.video_path = video_path
                 
-            if dataset=='summe':
-                self.video_list = [videoname for videoname in os.listdir(video_path) if videoname.endswith(".mp4")]
+            if dataset in ('summe', 'cosum'):
+                self.video_list = [videoname for videoname in os.listdir(video_path) if videoname.lower().endswith(".mp4")]
                 self.video_list.sort()
 
             elif dataset=='tvsum':
                 self.video_list = [videoname + ".mp4" for videoname in self.gt_list]
             
-            elif dataset=='ovp':
-                self.video_list = [videoname for videoname in os.listdir(video_path) if videoname.endswith(".mpg")]
+            elif dataset in ('ovp', 'youtube'):
+                self.video_list = [videoname for videoname in os.listdir(video_path) if videoname.lower().endswith((".mpg",".avi",".flv"))]
                 self.video_list.sort()
 
         else:
@@ -89,13 +90,21 @@ class Generate_Dataset:
             
             if dataset=='summe':
                 self.gt_path = path_ground_truth
-                self.gt_list = [gtvideo for gtvideo in os.listdir(path_ground_truth) if gtvideo.endswith(".mat")]
+                self.gt_list = [gtvideo for gtvideo in os.listdir(path_ground_truth) if gtvideo.lower().endswith(".mat")]
                 self.gt_list.sort()
 
-            elif dataset=='ovp':
+            elif dataset in ('ovp', 'youtube'):
                 self.gt_path = path_ground_truth
                 self.gt_list = [gtvideo for gtvideo in os.listdir(path_ground_truth) if os.path.isdir(os.path.join(path_ground_truth, gtvideo))]
                 self.gt_list.sort()
+
+            elif dataset=="cosum":
+                self.gt_path = path_ground_truth
+                df = pd.read_excel(self.gt_path + "/dataset.xlsx",engine='openpyxl')
+                df = df.loc[df["DOWNLOADED"]==1].reset_index(drop=True)
+                self.gt_list = sorted(list(df[["VIDEO_CATEGORY","SHORT CATEGORY",
+                                                "VIDEO_ID_IN_CATEGORY","VIDEO"]].drop_duplicates().values),
+                                        key=lambda x: x[-1] + ".mp4", reverse=False)
 
         else:
             if dataset=='summe':
@@ -103,8 +112,6 @@ class Generate_Dataset:
                 self.gt_list.append(path_ground_truth)
 
             elif dataset=='tvsum':
-                #self.gt_path = "/".join(path_ground_truth.split("/")[:-1])
-                print("path_ground_truth", path_ground_truth)
                 self.gt_path = h5py.File(path_ground_truth, 'r')
                 self.gt_list = get_video_ids(self.gt_path)
 
@@ -143,7 +150,7 @@ class Generate_Dataset:
     def _save_dataset(self):
         pass
 
-    def _get_ground_truth(self, dataset, gt_path, gt_filename, video_basename, video_feat_for_train, n_frames, fps):
+    def _get_ground_truth(self, dataset, gt_path, gt_filename, video_basename, video_feat_for_train, n_frames, fps, gt_info):
         
         if dataset=='summe':
             if os.path.isdir(self.gt_path):
@@ -156,11 +163,18 @@ class Generate_Dataset:
             annotations = np.where(annotations<=1,0,1)
             gt_video = {'user_score': annotations}
 
-        elif dataset=='ovp':
+        elif dataset in ('ovp', 'youtube'):
+
+            #youtube gt has less frames than the real ones, we found that 
+            #was resampled to 1.03 fps
+            factor = 1 if dataset=='ovp' else fps/1.03 
+
             gt_idx = []
-            for user_summ in np.sort(os.listdir(os.path.join(self.gt_path, video_basename))):
-                list_summ = [int(frame.split('.')[0][5:]) for frame in os.listdir(os.path.join(self.gt_path, video_basename, user_summ))]
+            for user_summ in np.sort([folder for folder in os.listdir(os.path.join(self.gt_path, video_basename)) if os.path.isdir(os.path.join(self.gt_path, video_basename, folder))]):
+                print("entra")
+                list_summ = [int(np.ceil(int(frame.split('.')[0][5:])*factor)) for frame in os.listdir(os.path.join(self.gt_path, video_basename, user_summ)) if frame.lower().endswith(("png","jpeg","jpg"))]
                 list_summ.sort()
+                print(list_summ)
                 gt_idx.append(list_summ)
 
             m = int(np.ceil(n_frames/(4.5*fps)))
@@ -175,17 +189,55 @@ class Generate_Dataset:
             begin_frames = change_points[:-1]
             end_frames = change_points[1:]
             change_points = np.vstack((begin_frames, end_frames - 1)).T
-                     
+
+            print("cp", change_points)
+
             annotations = []
             for user in gt_idx:
                 new_gt_user = np.zeros(n_frames)
                 segments = [segment for segment in change_points for frame in user if (frame>=segment[0]) and (frame<=segment[1])]
                 for segment in segments:
+                    print("segmento")
+                    print(segment)
                     new_gt_user[int(segment[0]):int(segment[1]+1)] = 1
                 annotations.append(new_gt_user)
             
             annotations = np.array(annotations).T
             gt_video = {'user_score': annotations}
+
+        elif dataset=="cosum":
+            category, short_name, video_id, video_name = gt_info
+
+            print("video_basename",video_basename)
+            print("video_name",video_name)
+
+            if video_basename==video_name:
+                path_ant_category = os.path.join(self.gt_path, "annotation", category)
+                path_shots_category = os.path.join(self.gt_path, "shots", category)
+                
+                shots = open(os.path.join(path_shots_category, f'{short_name}{video_id}_shots.txt'),'r')
+                shots = shots.read().splitlines()
+                shots = [int(np.ceil(int(nframe)*n_frames/int(shots[-1]))) for nframe in shots]
+
+                user1 = scipy.io.loadmat(os.path.join(path_ant_category, f'{video_id}__dualplus.mat'))["labels"][:,0] 
+                user2 = scipy.io.loadmat(os.path.join(path_ant_category, f'{video_id}__kk.mat'))["labels"][:,0]
+                user3 = scipy.io.loadmat(os.path.join(path_ant_category, f'{video_id}__vv.mat'))["labels"][:,0]
+
+                annotations = []
+                for user in (user1, user2, user3):
+                    new_gt_user = np.zeros(n_frames)
+                    for indexshot in user:
+                        if indexshot >= len(shots):
+                            indexshot = len(shots) - 1
+                    new_gt_user[int(shots[int(indexshot)-1])-1:int(shots[int(indexshot)])-1] = 1
+                    annotations.append(new_gt_user)
+
+                annotations = np.array(annotations).T
+                gt_video = {'user_score': annotations}
+            
+            else:
+                print("you are no getting the same files")
+                sys.exit(0)
 
         return gt_video 
 
@@ -193,7 +245,7 @@ class Generate_Dataset:
 
     def generate_dataset(self):
         for video_idx, video_gt in enumerate(tqdm(zip(self.video_list, self.gt_list), total=len(self.video_list))):
-            video_filename, _ = video_gt
+            video_filename, gt_info = video_gt
             gt_filename = video_filename
             video_path = video_filename
             gt_path = gt_filename
@@ -205,6 +257,9 @@ class Generate_Dataset:
                 
             if not os.path.exists(os.path.join(self.frame_root_path, video_basename)):
                 os.mkdir(os.path.join(self.frame_root_path, video_basename))
+
+            print("video_path", video_path)
+
             video_capture = cv2.VideoCapture(video_path)
            
 
@@ -236,7 +291,8 @@ class Generate_Dataset:
             video_capture.release()
             video_feat_for_train = np.array(video_feat_for_train)
 
-            gt_video = self._get_ground_truth(self.dataset, gt_path, gt_filename, video_basename, video_feat_for_train, n_frames, fps)
+            gt_video = self._get_ground_truth(self.dataset, gt_path, gt_filename, video_basename,
+                                                 video_feat_for_train, n_frames, fps, gt_info)
 
             user_score = np.array(gt_video["user_score"].T, dtype=np.float32)
             n_frames = user_score.shape[1]
@@ -268,11 +324,18 @@ if __name__ == "__main__":
      #                      '/data/shuaman/video_summarization/datasets/raw_datasets/TVsum/ydata-tvsum50-v1_1/matlab/ydata-tvsum50.mat',
       #                      'eccv16_dataset_tvsum_google_pool5.h5', dataset='tvsum')
 
-
+    #gen = Generate_Dataset('/data/shuaman/video_summarization/datasets/raw_datasets/VSUMM/new_database/', 
+     #                       '/data/shuaman/video_summarization/datasets/raw_datasets/VSUMM/newUserSummary/',
+      #                          'eccv16_dataset_youtube_google_pool5.h5', dataset='youtube')
+    '''
     gen = Generate_Dataset('/data/shuaman/video_summarization/datasets/raw_datasets/VSUMM/database/', 
                             '/data/shuaman/video_summarization/datasets/raw_datasets/VSUMM/UserSummary/',
                                 'eccv16_dataset_ovp_google_pool5.h5', dataset='ovp')
-
+    '''
+    gen = Generate_Dataset('/data/shuaman/video_summarization/datasets/raw_datasets/CoSum/videos/', 
+                            '/data/shuaman/video_summarization/datasets/raw_datasets/CoSum/',
+                                'eccv16_dataset_cosum_google_pool5.h5', dataset='cosum')
+    
 
     gen.generate_dataset()
     gen.h5_file.close()
