@@ -15,16 +15,18 @@ class I3D(nn.Module):
         self.model_flow = InceptionI3d(400, in_channels=2)
         self.model_rgb = InceptionI3d(400, in_channels=3)
 
-        self.model_flow.load_state_dict(torch.load(path_weights_flow))
-        self.model_rgb.load_state_dict(torch.load(path_weights_rgb))
+        if path_weights_flow is not None: 
+            self.model_flow.load_state_dict(torch.load(path_weights_flow))
+        if path_weights_rgb is not None:
+            self.model_rgb.load_state_dict(torch.load(path_weights_rgb))
         
         self.transforms = transforms.Compose([CenterCrop(224)])
         self.device = device
 
-    def forward(self, frame_list, flow_frames, n_frames):
+    def forward(self, frame_list, flow_frames):
         #img = Image.fromarray(img)
-        imgs_flow = self.load_flow_frames(flow_frames, 1, n_frames-16)
-        imgs_rgb = self.load_rgb_frames(frame_list, 1, n_frames)
+        imgs_flow = self.load_flow_frames(flow_frames, 1, len(flow_frames))
+        imgs_rgb = self.load_rgb_frames(frame_list, 1, len(frame_list))
 
         imgs_flow = self.video_to_tensor(self.transforms(imgs_flow))
         imgs_rgb = self.video_to_tensor(self.transforms(imgs_rgb))
@@ -36,35 +38,22 @@ class I3D(nn.Module):
             self.model_rgb.train(False)
 
         with torch.no_grad():
+            
             imgs_rgb = imgs_rgb.unsqueeze(0)
             b,c,t,h,w = imgs_rgb.shape
-            if t > 1600:
-                features_rgb = []
-                for start in range(1, t-56, 1600):
-                    end = min(t-1, start+1600+56)
-                    start = max(1, start-48)
-                    ip = Variable(torch.from_numpy(imgs_rgb.numpy()[:,:,start:end]).to(self.device), volatile=True)
-                    features_rgb.append(self.model_rgb.extract_features(ip).squeeze(0).permute(1,2,3,0).data.cpu().numpy())
-            else:
-                # wrap them in Variable
-                imgs_rgb = Variable(imgs_rgb.to(self.device), volatile=True)
-                features_rgb = self.model_rgb.extract_features(imgs_rgb)
-
+            features_rgb = []
+            for start in range(t-16):
+                ip = Variable(torch.from_numpy(imgs_rgb.numpy()[:,:,start:start+16]).to(self.device))
+                features_rgb.append(self.model_rgb.extract_features(ip).squeeze(0).permute(1,2,3,0).data.cpu().numpy())
+            
             imgs_flow = imgs_flow.unsqueeze(0)
             b,c,t,h,w = imgs_flow.shape
-            if t > 1600:
-                features_flow = []
-                for start in range(1, t-56, 1600):
-                    end = min(t-1, start+1600+56)
-                    start = max(1, start-48)
-                    ip = Variable(torch.from_numpy(imgs_flow.numpy()[:,:,start:end]).to(self.device), volatile=True)
-                    features_flow.append(self.model_flow.extract_features(ip).squeeze(0).permute(1,2,3,0).data.cpu().numpy())
-            else:
-                # wrap them in Variable
-                imgs_flow = Variable(imgs_flow.to(self.device), volatile=True)
-                features_flow = self.model_flow.extract_features(imgs_flow)
+            features_flow = []
+            for start in range(t-16):
+                ip = Variable(torch.from_numpy(imgs_flow.numpy()[:,:,start:start+16]).to(self.device))
+                features_flow.append(self.model_flow.extract_features(ip).squeeze(0).permute(1,2,3,0).data.cpu().numpy())
 
-        return features_rgb, features_flow
+        return np.concatenate(features_rgb, axis=0).squeeze(), np.concatenate(features_flow, axis=0).squeeze()
 
 
     def load_rgb_frames(self, frame_list, start, num):

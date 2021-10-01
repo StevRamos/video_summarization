@@ -15,7 +15,7 @@ class ResNet(nn.Module):
         fea_type: string, resnet101 or resnet 152
     """
 
-    def __init__(self, fea_type = 'resnet152'):
+    def __init__(self, device, fea_type = 'resnet152'):
         super(ResNet, self).__init__()
         self.fea_type = fea_type
         # rescale and normalize transformation
@@ -31,8 +31,10 @@ class ResNet(nn.Module):
         else:
             raise Exception('No such ResNet!')
 
+        self.device = device
+
         resnet.float()
-        resnet.cuda()
+        resnet.to(self.device)
         resnet.eval()
 
         module_list = list(resnet.children())
@@ -43,7 +45,7 @@ class ResNet(nn.Module):
     def forward(self, x):
         x = self.transform(x)
         x = x.unsqueeze(0)  # reshape the single image s.t. it has a batch dim
-        x = Variable(x).cuda()
+        x = Variable(x).to(self.device)
         res_conv5 = self.conv5(x)
         res_pool5 = self.pool5(res_conv5)
         res_pool5 = res_pool5.view(res_pool5.size(0), -1)
@@ -53,7 +55,7 @@ class ResNet(nn.Module):
 
 
 class GoogleNet(nn.Module):
-    def __init__(self):
+    def __init__(self, device):
         super(GoogleNet, self).__init__()
         self.preprocess = transforms.Compose([
             transforms.Resize(256),
@@ -64,6 +66,7 @@ class GoogleNet(nn.Module):
         self.model = torch.hub.load('pytorch/vision:v0.10.0', 'googlenet', pretrained=True)
         self.model = torch.nn.Sequential(*list(self.model.children())[:-1])
         self.model.eval()
+        self.device = device
 
     def forward(self, img: np.ndarray) -> np.ndarray:
         img = Image.fromarray(img)
@@ -71,8 +74,8 @@ class GoogleNet(nn.Module):
         batch = img.unsqueeze(0)
 
         if torch.cuda.is_available():
-            batch = batch.to('cuda')
-            self.model = self.model.to('cuda')
+            batch = batch.to(self.device)
+            self.model = self.model.to(self.device)
             
         with torch.no_grad():
             feat = self.model(batch)

@@ -26,7 +26,6 @@ def cpd_auto(K, ncp, vmax, desc_rate=1, **kwargs):
     That is 1,6 Gb for the N=10000.
     """
     m = ncp
-    print("before cpd nonlin")
     (_, scores) = cpd_nonlin(K, m, backtrack=False, **kwargs)
     #(cps, scores) = cpd_nonlin(K, m, backtrack=False, **kwargs)
     

@@ -43,7 +43,6 @@ def cpd_nonlin(K, ncp, lmin=1, lmax=100000, backtrack=True, verbose=True,
         - obj_vals - values of the objective function for 0..m changepoints
     """
     m = int(ncp)  # prevent numpy.int64
-    print("inside cpd nonlin")
     n, n1 = K.shape
     assert n == n1, 'Kernel matrix awaited.'
     assert (m + 1) * lmin <= n <= (m + 1) * lmax
