@@ -132,3 +132,5 @@ dmypy.json
 *.h5
 src/frames/
 notebooks/internal_tests
+src/*.out
+*.out
