@@ -30,3 +30,4 @@ openpyxl==3.0.9
 opencv-contrib-python==4.5.3.56
 ipywidgets==7.6.5
 torchinfo==1.5.3
+scikit-learn==1.0

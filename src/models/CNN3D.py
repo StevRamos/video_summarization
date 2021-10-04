@@ -117,8 +117,8 @@ class ResNet3D(nn.Module):
                                           conv1_t_stride=1, 
                                           no_max_pool=False,
                                           widen_factor=1.0)
-        pretrain = torch.load(path_weights)
         if path_weights is not None: 
+            pretrain = torch.load(path_weights)
             self.model.load_state_dict(pretrain['state_dict'])
             
         self.model = torch.nn.Sequential(*list(self.model.children())[:-1])
