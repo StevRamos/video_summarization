@@ -68,4 +68,3 @@ def show_sample(idx, hdfs_path):
     video_info, label = vsm_dataset[idx]
 
     return video_info, label
-
