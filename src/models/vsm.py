@@ -34,22 +34,22 @@ class VideoSumarizer():
         avg_loss = []
 
         for video_info, label in training_generator:
-            target = label['gtscore']
-            features = [video_info[key] for key in video_info.keys() if 'features' in  key]
-            min_shape = np.min[feature.shape[0] for feature in features]
-
-            features = [cv2.resize(feature, (feature.shape[1],min_shape), interpolation = cv2.INTER_AREA) for feature un features]
+            target = (label['gtscore'].squeeze(0)).cpu().numpy()
+            features = [(video_info[key].squeeze(0)).cpu().numpy() for key in video_info.keys() if 'features' in  key]
+        
+            shape_desire = target.shape[0]
+            features = [cv2.resize(feature, (feature.shape[1],shape_desire), interpolation = cv2.INTER_AREA) for feature in features]
+        
             features = [torch.from_numpy(feature).unsqueeze(0) for feature in features]
             target =  torch.from_numpy(target).unsqueeze(0)
 
             target -= target.min()
             target = np.true_divide(target, target.max())
 
-            target = target.float.to(self.device)
-            features = [feature.float.to(self.device) for feature in features]
-            seq_len = features[0].shape[1]
+            target = target.float().to(self.device)
+            features = [feature.float().to(self.device) for feature in features]
 
-            y, _ = self.msva(features, seq_len)
+            y, _ = self.msva(features, shape_desire)
 
             loss = criterion(y, target)
             optimizer.zero_grad()
@@ -72,23 +72,24 @@ class VideoSumarizer():
 
         with torch.no_grad():
             for video_info, label in test_generator:
-                target = label['gtscore']
-                features = [video_info[key] for key in video_info.keys() if 'features' in  key]
-                min_shape = np.min[feature.shape[0] for feature in features]
 
-                features = [cv2.resize(feature, (feature.shape[1],min_shape), interpolation = cv2.INTER_AREA) for feature un features]
+                target = (label['gtscore'].squeeze(0)).cpu().numpy()
+                features = [(video_info[key].squeeze(0)).cpu().numpy() for key in video_info.keys() if 'features' in  key]
+            
+                shape_desire = target.shape[0]
+                features = [cv2.resize(feature, (feature.shape[1],shape_desire), interpolation = cv2.INTER_AREA) for feature in features]
+            
                 features = [torch.from_numpy(feature).unsqueeze(0) for feature in features]
                 target =  torch.from_numpy(target).unsqueeze(0)
 
                 target -= target.min()
                 target = np.true_divide(target, target.max())
 
-                target = target.float.to(self.device)
-                features = [feature.float.to(self.device) for feature in features]
-                seq_len = features[0].shape[1]
+                target = target.float().to(self.device)
+                features = [feature.float().to(self.device) for feature in features]
 
-                y, _ = self.msva(features, seq_len)
-
+                y, _ = self.msva(features, shape_desire)
+                
                 criterion = torch.nn.MSELoss()
                 criterion.to(self.device)
 
@@ -97,17 +98,17 @@ class VideoSumarizer():
                 avg_loss.append(test_loss.item())
                 summary = y[0].detach().cpu().numpy()
 
-                machine_summary = generate_summary(summary, video_info["change_points"],
-                                                  video_info["n_frames"], video_info["n_frame_per_seg"],
-                                                    video_info["picks"])
+                machine_summary = generate_summary(summary, (video_info["change_points"].squeeze(0)).cpu().numpy(),
+                                                  (video_info["n_frames"].squeeze(0)).cpu().numpy(), (video_info["n_frame_per_seg"].squeeze(0)).cpu().numpy(),
+                                                    (video_info["picks"].squeeze(0)).cpu().numpy())
 
                 eval_metric = 'avg' if video_info["name_dataset"][0] == "tvsum" else 'max'
-                fm, _, _ = evaluate_summary(machine_summary, label["user_summary"],
+                fm, _, _ = evaluate_summary(machine_summary, (label["user_summary"].squeeze(0)).cpu().numpy(),
                                                 eval_metric)
                 
                 fms.append(fm)
                 y_pred2 = machine_summary
-                y_true2 = label["user_summary"].mean(axis=0)
+                y_true2 = (label["user_summary"].squeeze(0)).cpu().numpy().mean(axis=0)
                 pS = spearmanr(y_pred2, y_true2)[0]
                 kT = kendalltau(rankdata(-np.array(y_true2)), rankdata(-np.array(y_pred2)))[0]
                 kts.append(kT)
@@ -155,7 +156,9 @@ class VideoSumarizer():
                 }
 
         training_generator, test_generator = get_dataloaders(dataset_paths, split,
-                                                            dict_use_feature, params)
+                                                            dict_use_feature, params,
+                                                            self.config.transformations_path)
+                                                            
         optimizer = init_optimizer(self.msva, self.config.learning_rate, self.config.weight_decay)
         criterion = torch.nn.MSELoss()
         criterion.to(self.device)

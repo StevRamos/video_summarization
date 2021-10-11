@@ -43,7 +43,7 @@ def get_flags_features(feature1, feature2):
     return dict_use_feature     
 
 
-def get_dataloaders(dataset_paths, split, dict_use_feature, params):
+def get_dataloaders(dataset_paths, split, dict_use_feature, params, transformations_path):
     training_set = VSMDataset(dataset_paths, split=split, key_split="train_keys",
                                 googlenet=dict_use_feature["googlenet"],
                                 resnext=dict_use_feature["resnext"],
@@ -51,6 +51,7 @@ def get_dataloaders(dataset_paths, split, dict_use_feature, params):
                                 i3d_rgb=dict_use_feature["i3d_rgb"],
                                 i3d_flow=dict_use_feature["i3d_flow"],
                                 resnet3d=dict_use_feature["resnet3d"],
+                                transformations_path=transformations_path
                                 )
     test_set = VSMDataset(dataset_paths, split=split, key_split="test_keys",
                                 googlenet=dict_use_feature["googlenet"],
@@ -59,6 +60,7 @@ def get_dataloaders(dataset_paths, split, dict_use_feature, params):
                                 i3d_rgb=dict_use_feature["i3d_rgb"],
                                 i3d_flow=dict_use_feature["i3d_flow"],
                                 resnet3d=dict_use_feature["resnet3d"],
+                                transformations_path=transformations_path
                                 )
     training_generator = torch.utils.data.DataLoader(training_set, **params, shuffle=True)
     test_generator = torch.utils.data.DataLoader(test_set, **params)

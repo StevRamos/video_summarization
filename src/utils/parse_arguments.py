@@ -70,6 +70,7 @@ def configure_model(config_file, use_wandb):
         type_dataset = config_file["hparams"]["type_dataset"],
         type_setting = config_file["hparams"]["type_setting"],
         sameAccStopThres = config_file["hparams"]["sameAccStopThres"],
+        transformations_path = config_file["hparams"]["transformations_path"],
 
         path_tvsum = config_file["datasets"]["path_tvsum"],
         path_summe = config_file["datasets"]["path_summe"],

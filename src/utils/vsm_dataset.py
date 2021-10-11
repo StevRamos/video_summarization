@@ -1,5 +1,6 @@
 import torch 
 import h5py
+import pickle
 
 class VSMDataset(torch.utils.data.Dataset):
     """Video Summarizer Dataset
@@ -12,7 +13,8 @@ class VSMDataset(torch.utils.data.Dataset):
                  inceptionv3=False,
                  i3d_rgb=False,
                  i3d_flow=False,
-                 resnet3d=False
+                 resnet3d=False,
+                 transformations_path=None
                 ):
         """
         Args:
@@ -23,6 +25,9 @@ class VSMDataset(torch.utils.data.Dataset):
             hdfs_paths = [hdfs_path]
         else:
             hdfs_paths = hdfs_path 
+
+        if transformations_path is not None:
+            transformations = pickle.load(open(transformations_path, 'rb'))
         
         self.labels = {}
         self.data = {}
@@ -74,9 +79,24 @@ class VSMDataset(torch.utils.data.Dataset):
                 self.labels[iterator_videos] = dict((key, videos_info[video][key][...])for key in list(videos_info[video]) if key in ('gtscore', 'gtsummary', 'user_summary') )
                 self.data[iterator_videos] = dict((key, videos_info[video][key][...])for key in list(videos_info[video]) if key not in keys_to_avoid )   
                 self.data[iterator_videos]['name_dataset'] = name_dataset
-                if "video_name" in self.data[it].keys():
+
+                if "video_name" in self.data[iterator_videos].keys():
                     self.data[iterator_videos]["video_name"] = str(self.data[iterator_videos]["video_name"]) 
+                
+                if transformations_path is not None:
+                    if "features_rn" in self.data[iterator_videos].keys():
+                        features_rn = self.data[iterator_videos]["features_rn"]
+                        self.data[iterator_videos]["features_rn"] = transformations["pca_rn"].transform(transformations["normalizer_rn"].transform(features_rn))
+                    if "features_iv3" in self.data[iterator_videos].keys():
+                        features_iv3 = self.data[iterator_videos]["features_iv3"]
+                        self.data[iterator_videos]["features_iv3"] = transformations["pca_iv3"].transform(transformations["normalizer_iv3"].transform(features_iv3))
+                    if "features_3D" in self.data[iterator_videos].keys():
+                        features_3D = self.data[iterator_videos]["features_3D"]
+                        self.data[iterator_videos]["features_3D"] = transformations["pca_3D"].transform(transformations["normalizer_3D"].transform(features_3D))
+                    
                 iterator_videos = iterator_videos + 1
+                
+
         
     def __len__(self):
         return len(self.data)

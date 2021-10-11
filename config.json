@@ -7,7 +7,8 @@
         "feature_2": "i3d",
         "type_dataset": "tvsum",
         "type_setting": "canonical",
-        "sameAccStopThres": 50
+        "sameAccStopThres": 50,
+        "transformations_path": "/data/shuaman/video_summarization/datasets/processed_datasets/transformations.pk",
     },
     "datasets":{
         "path_tvsum": "/data/shuaman/video_summarization/datasets/processed_datasets/eccv16_dataset_tvsum_google_pool5.h5",
