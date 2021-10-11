@@ -1,5 +1,7 @@
 # Video Summarization of Sports Videos
 
+Based on https://github.com/TIBHannover/MSVA
+
 To download the raw dataset (SumMe, TVSum, VSumm, CoSum, and Visiocity), I used the gshell library. It can be downloaded from pip. Since it has 16GB I recommend using it. Run the following command to get the preprocessed data set.
 
 1. `pip3 install gshell==5.5.2`
