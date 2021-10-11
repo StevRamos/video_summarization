@@ -107,12 +107,14 @@ class Generate_Dataset:
                 self.video_list = [videoname + ".mp4" for videoname in self.gt_list]
             elif dataset in ('ovp', 'youtube'):
                 self.video_list = [videoname for videoname in os.listdir(video_path) if videoname.lower().endswith((".mpg",".avi",".flv"))]
-                self.video_list.sort()
+                self.video_list = sorted(self.video_list, key=lambda x: int(x.split('.')[0][1:]))
         else:
             self.video_path = ''
             self.video_list.append(video_path)
 
         for idx, file_name in enumerate(self.video_list):
+            if (dataset=="youtube") and (idx in (0,1,2,3,4,5,6,7,8,9,21)):
+                continue
             self.h5_file.create_group('video_{}'.format(idx+1))
 
     def _set_gt_lista(self, path_ground_truth, dataset='summe'):
@@ -173,10 +175,11 @@ class Generate_Dataset:
             if os.path.isdir(self.gt_path):
                     gt_path = os.path.join(self.gt_path, video_basename+".mat")
             gt_video = scipy.io.loadmat(gt_path) 
+            gt_video["user_score"] = np.where(gt_video["user_score"]>0,1,0)
         elif dataset=='tvsum':
             gt_idx = self.gt_list.index(video_basename)
             annotations = get_field_by_idx(self.gt_path, 'user_anno', gt_idx).T
-            annotations = np.where(annotations<=1,0,1)
+            annotations = (annotations-1)/4 #en tvsum el score va de 1 a 4
             gt_video = {'user_score': annotations}
         elif dataset in ('ovp', 'youtube'):
             #youtube gt has less frames than the real ones 
@@ -242,6 +245,11 @@ class Generate_Dataset:
 
     def generate_dataset(self):
         for video_idx, video_gt in enumerate(tqdm(zip(self.video_list, self.gt_list), total=len(self.video_list))):
+            
+            if (self.dataset=="youtube") and (video_idx in (0,1,2,3,4,5,6,7,8,9,21)):
+                print("This video is cartoon")
+                continue
+            
             video_filename, gt_info = video_gt
             gt_filename = video_filename
             video_path = video_filename
@@ -321,7 +329,7 @@ class Generate_Dataset:
             self.h5_file['video_{}'.format(video_idx+1)]['fps'] = fps
             self.h5_file['video_{}'.format(video_idx+1)]['change_points'] = change_points
             self.h5_file['video_{}'.format(video_idx+1)]['n_frame_per_seg'] = n_frame_per_seg
-            self.h5_file['video_{}'.format(video_idx+1)]['user_summary'] = user_score
+            self.h5_file['video_{}'.format(video_idx+1)]['user_summary'] = user_score if self.dataset!="tvsum" else np.where(user_score>0.5, 1, 0)
             self.h5_file['video_{}'.format(video_idx+1)]['gtscore'] = gtscore
             self.h5_file['video_{}'.format(video_idx+1)]['features_rgb'] = features_rgb
             self.h5_file['video_{}'.format(video_idx+1)]['features_flow'] = features_flow
