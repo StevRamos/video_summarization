@@ -54,6 +54,8 @@ def parse_arguments_train():
                     help="notes of the execution to save in wandb")
     ap.add_argument('-p', '--params', required=True, type=str, default=None,
                     help="path of json file")
+    ap.add_argument('-pm', '--pretrained_model', required=False, type=str,
+                    default=None, help="path of pretrained model")
 
     args = ap.parse_args()
 
@@ -89,7 +91,8 @@ def configure_model(config_file, use_wandb):
 
         save_weights = config_file["save_weights"],
         num_backups = config_file["num_backups"],
-        path_saved_weights = config_file["path_saved_weights"]
+        path_saved_weights = config_file["path_saved_weights"],
+        weights_default = config_file["weights_default"]
     )
 
     if not use_wandb:

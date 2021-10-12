@@ -8,7 +8,7 @@
         "type_dataset": "tvsum",
         "type_setting": "canonical",
         "sameAccStopThres": 50,
-        "transformations_path": "/data/shuaman/video_summarization/datasets/processed_datasets/transformations.pk",
+        "transformations_path": "/data/shuaman/video_summarization/datasets/processed_datasets/transformations.pk"
     },
     "datasets":{
         "path_tvsum": "/data/shuaman/video_summarization/datasets/processed_datasets/eccv16_dataset_tvsum_google_pool5.h5",
@@ -28,6 +28,7 @@
         "path_split_tvsum_non_overlap_rand": "/home/shuaman/video_sm/video_summarization/splits/msva_splits/tvsum_random_non_overlap_splits.json"
     },
     "save_weights": true,
-    "num_backups": 10,
-    "path_saved_weights": "/data/shuaman/video_summarization/datasets/weights_trained/"
+    "num_backups": 5,
+    "path_saved_weights": "/data/shuaman/video_summarization/datasets/weights_trained/",
+    "weights_default": "weights_default"
 }

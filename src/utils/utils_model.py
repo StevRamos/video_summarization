@@ -1,6 +1,9 @@
+import os
+
 import torch.nn.init as init
 import torch
 import wandb
+import numpy as np
 
 from .vsm_dataset import VSMDataset
 
@@ -14,7 +17,7 @@ def weights_init(m):
 def save_weights(model, path, use_wandb):
     torch.save(model.state_dict(), os.path.join(path, 'vsm.pth'))
     if use_wandb:
-        wandb.save(ps.path.join(path, 'vsm.pth'),
+        wandb.save(os.path.join(path, 'vsm.pth'),
                     base_path='/'.join(path.split('/')[:-2]))   
 
 
@@ -76,7 +79,7 @@ def init_optimizer(model, learning_rate, weight_decay):
 def get_paths(type_dataset,type_setting, path_tvsum, 
             path_summe, path_ovp, path_youtube, path_cosum):
 
-    if (type_setting is None) or (type_setting in ("transfer", "augmented")):
+    if (type_setting is None) or (type_setting in ("transfer", "aug")):
         paths = [
                 path_tvsum,
                 path_summe,
@@ -84,11 +87,14 @@ def get_paths(type_dataset,type_setting, path_tvsum,
                 path_youtube,
                 path_cosum
                 ]
-    elif type_setting=="canonical":
+    elif type_setting in ("canonical", "non_overlap_ord", "non_overlap_rand"):
         if type_dataset=="summe":
             paths = path_summe
         elif type_dataset=="tvsum":
             paths = path_tvsum
     else:
         paths = []
+    
+    assert len(paths) > 0, f'Invalid len paths {len(paths)}: expected type_setting transfer,aug,canonical,non_overlap_ord,non_overlap_rand'
+
     return paths

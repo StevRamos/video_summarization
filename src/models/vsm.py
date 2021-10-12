@@ -5,12 +5,12 @@ import numpy as np
 import torch
 import torchvision
 import wandb
-import tqdm
+from tqdm import tqdm
 from scipy.stats import kendalltau, spearmanr, rankdata
 
 from .msva import MSVA
-from utils import weights_init, generate_summary, evaluate_summary, save_weights 
-from utils import get_flags_features, get_dataloaders, get_paths
+from src.utils import weights_init, generate_summary, evaluate_summary, save_weights 
+from src.utils import get_flags_features, get_dataloaders, get_paths, init_optimizer, parse_configuration
 
 class VideoSumarizer():
     def __init__(self, config, use_wandb):
@@ -22,11 +22,15 @@ class VideoSumarizer():
 
     def init_model(self):
         msva = MSVA()
-        msva.to(self.device)
         msva.apply(weights_init)
+        msva.to(self.device)
         if self.use_wandb:
             wandb.watch(msva, log="all")
         return msva
+
+    def load_weights(self, weights_path):
+        self.msva.load_state_dict(torch.load(weights_path, 
+                                            map_location=torch.device(self.device)))
     
     def train_step(self, training_generator, criterion, optimizer):
         self.msva.train()
@@ -123,17 +127,24 @@ class VideoSumarizer():
         return f_score, kt, sp, avg_loss
 
 
-    def train(self, split=None):
+    def train(self, split=None, n_split=None, pretrained_model=None):
         if torch.cuda.is_available():
             print(f'Training in {torch.cuda.get_device_name(0)}')
         else:
             print('Training in CPU')
         
+        if pretrained_model:
+            self.load_weights(pretrained_model)
+
         if self.config.save_weights:
             if self.use_wandb:
                 path_saved_weights = os.path.join(self.config.path_saved_weights, wandb.run.id)
-            else 
-                path_saved_weights = os.path.join(self.config.path_saved_weights, 'weights_default')
+            else:
+                if split is None:
+                    path_saved_weights = os.path.join(self.config.path_saved_weights, f'{self.config.weights_default}_{self.config.feature_1}_{self.config.feature_2}')
+                else:
+                    path_saved_weights = os.path.join(self.config.path_saved_weights, 
+                                        f'{str(n_split)}_{self.config.type_dataset}_{self.config.type_setting}_{self.config.feature_1}_{self.config.feature_2}')
             try:
                 os.mkdir(path_saved_weights)
             except OSError:
@@ -176,12 +187,12 @@ class VideoSumarizer():
             f_score, kt, sp, test_loss = self.eval_function(test_generator)
 
             metrics_log = {
-                "epoch": epoch + 1,
-                "train_loss": train_loss,
-                "f_score": f_score,
-                "kt": kt,
-                "sp": sp,
-                "test_loss": test_loss
+                "epoch" + f'_split_{n_split}' if split else "epoch": epoch + 1,
+                "train_loss" + f'_split_{n_split}' if split else "epoch": train_loss,
+                "f_score" + f'_split_{n_split}' if split else "epoch": f_score,
+                "kt" + f'_split_{n_split}' if split else "epoch": kt,
+                "sp" + f'_split_{n_split}' if split else "epoch": sp,
+                "test_loss" + f'_split_{n_split}' if split else "epoch": test_loss
             }
 
             if self.config.save_weights and ((epoch+1) % int(self.config.epochs_max/self.config.num_backups)) == 0:
@@ -192,7 +203,7 @@ class VideoSumarizer():
                     pass
                 save_weights(self.msva, path_save_epoch, self.use_wandb)
 
-            if use_wandb:
+            if self.use_wandb:
                 wandb.log(metrics_log)
 
             print("Losses/Metrics")
@@ -229,7 +240,56 @@ class VideoSumarizer():
                 save_weights(self.msva, path_save_epoch, self.use_wandb)
                 break
 
-        if self.use_wandb:
+        if self.use_wandb and (split is None):
             wandb.finish()
 
         return max_val_fscore, maxkt, maxsp, maxtrl, maxtsl
+
+
+    def train_cross_validation(self, pretrained_model=None):
+        f_avg = 0
+        kt_avg = []
+        sp_avg = []
+        trl_avg = 0
+        tsl_avg = 0
+        
+        split_name = f'path_split_{self.config.type_dataset}_{self.config.type_setting}'
+        path_split = vars(self.config)[split_name] if not self.use_wandb else vars(self.config)["_items"][split_name] 
+        splits = parse_configuration(path_split)
+
+        for n_split in range(len(splits)):
+            self.msva = self.init_model()
+            print(f'Split number {n_split+1}')
+            max_val_fscore, maxkt, maxsp, maxtrl, maxtsl = self.train(splits[n_split], n_split+1, pretrained_model)
+            f_avg += max_val_fscore
+            if (maxkt>=-1) and (maxkt<=1):
+                 kt_avg.append(maxkt)
+            if (maxsp>=-1) and (maxsp<=1):
+                 sp_avg.append(maxsp)
+            trl_avg += maxtrl
+            tsl_avg += maxtsl
+
+        f_avg = f_avg/len(splits)
+        kt_avg = sum(kt_avg)/len(kt_avg)
+        sp_avg = sum(sp_avg)/len(sp_avg)
+        trl_avg = trl_avg/len(splits)
+        tsl_avg = tsl_avg/len(splits)   
+
+        if self.use_wandb:
+            wandb.log({
+                "train_loss": trl_avg,
+                "f_score": f_avg,
+                "kt": kt_avg,
+                "sp": sp_avg,
+                "test_loss": tsl_avg 
+            })
+
+        print("Metrics - cross validation")
+        print('Train loss: {:.4f}'.format(trl_avg))
+        print('Test loss: {:.4f}'.format(tsl_avg))
+        print('F1 score: {:.4f}'.format(f_avg))
+        print('Spearman s correlation: {:.4f}'.format(sp_avg))
+        print('Kendall s correlation: {:.4f}'.format(kt_avg))    
+
+        if self.use_wandb:
+            wandb.finish()
