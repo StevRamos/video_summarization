@@ -3,8 +3,12 @@
         "learning_rate": 0.00005,
         "weight_decay": 0.00001,
         "epochs_max": 300,
-        "feature_1": "googlenet",
-        "feature_2": "i3d",
+        "googlenet": true,
+        "resnext": false,
+        "inceptionv3": false,
+        "i3d_rgb": true,
+        "i3d_flow": true,
+        "resnet3d": false,
         "type_dataset": "summe",
         "type_setting": "canonical",
         "sameAccStopThres": 50,
@@ -28,7 +32,7 @@
         "path_split_tvsum_non_overlap_rand": "/home/shuaman/video_sm/video_summarization/splits/msva_splits/tvsum_random_non_overlap_splits.json"
     },
     "save_weights": true,
-    "num_backups": 5,
+    "num_backups": 2,
     "path_saved_weights": "/data/shuaman/video_summarization/datasets/weights_trained/",
     "weights_default": "weights_default"
 }

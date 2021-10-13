@@ -22,10 +22,12 @@ class VideoSumarizer():
 
     def init_model(self):
         msva = MSVA()
+        msva.eval()
         msva.apply(weights_init)
         msva.to(self.device)
         if self.use_wandb:
             wandb.watch(msva, log="all")
+        msva.train()
         return msva
 
     def load_weights(self, weights_path):
@@ -150,7 +152,16 @@ class VideoSumarizer():
             except OSError:
                 pass
 
-        dict_use_feature = get_flags_features(self.config.feature_1, self.config.feature_2)
+        dict_use_feature = {
+            "googlenet": self.config.googlenet,
+            "resnext": self.config.resnext,
+            "inceptionv3": self.config.inceptionv3,
+            "i3d_rgb": self.config.i3d_rgb,
+            "i3d_flow": self.config.i3d_flow,
+            "resnet3d": self.config.resnet3d
+        }
+
+        #dict_use_feature = get_flags_features(self.config.feature_1, self.config.feature_2)
 
         dict_paths = {
             'path_tvsum': self.config.path_tvsum,
@@ -178,8 +189,6 @@ class VideoSumarizer():
         max_val_fscore = 0
         maxkt = 0
         maxsp = 0
-        maxtrl = 0
-        maxtsl = 0
         max_val_fscoreLs=[]
 
         for epoch in tqdm(range(self.config.epochs_max)):
@@ -222,11 +231,9 @@ class VideoSumarizer():
                 max_val_fscore = f_score
                 maxkt = kt
                 maxsp = sp
-                maxtrl = train_loss
-                maxtsl = test_loss
             max_val_fscoreLs.append(max_val_fscore)
 
-            if(len(max_val_fscoreLs)>2 and max_val_fscoreLs[-2]>=max_val_fscoreLs[-1]):
+            if(len(max_val_fscoreLs)>2) and (max_val_fscoreLs[-2]>=max_val_fscoreLs[-1]):
                 sameCount+=1
             else:
                 sameCount=0
@@ -243,7 +250,7 @@ class VideoSumarizer():
         if self.use_wandb and (split is None):
             wandb.finish()
 
-        return max_val_fscore, maxkt, maxsp, maxtrl, maxtsl
+        return max_val_fscore, maxkt, maxsp, train_loss, test_loss
 
 
     def train_cross_validation(self, pretrained_model=None):

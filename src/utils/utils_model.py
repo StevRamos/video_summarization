@@ -79,7 +79,14 @@ def init_optimizer(model, learning_rate, weight_decay):
 def get_paths(type_dataset,type_setting, path_tvsum, 
             path_summe, path_ovp, path_youtube, path_cosum):
 
-    if (type_setting is None) or (type_setting in ("transfer", "aug")):
+    if type_setting in ("transfer", "aug"):
+        paths = [
+                path_tvsum,
+                path_summe,
+                path_ovp,
+                path_youtube
+                ]
+    elif type_setting in ("transfer_vsm", "aug_vsm", "all"):
         paths = [
                 path_tvsum,
                 path_summe,

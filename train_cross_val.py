@@ -31,13 +31,29 @@ def train(config_file, use_wandb=True, run_name=None, run_notes=None, pretrained
         wandb.init(project=PROJECT_WANDB, config=config, 
                     name=run_name, notes=run_notes)
         config = wandb.config
-        wandb.run_name = wandb.run_name if run_name is not None else f'Exp. {config["feature_1"]} - {config["feature_2"]}'
-        wandb.run_notes = wandb.run_notes if run_notes is not None else f'Exp. {config["type_dataset"]} - {config["type_setting"]}'
+        
+        name_default = "GN " if config.googlenet else ""
+        name_default = name_default + "RNT " if config.resnext else name_default
+        name_default = name_default + "IV3 " if config.inceptionv3 else name_default
+        name_default = name_default + "RGB " if config.i3d_rgb else name_default
+        name_default = name_default + "FLOW " if config.i3d_flow else name_default
+        name_default = name_default + "R3D " if config.resnet3d else name_default
+        name_default = '-'.join(name_default.strip().split(" "))
+
+        wandb.run.name = wandb.run.name if run_name is not None else name_default
+        wandb.run.notes = wandb.run.notes if run_notes is not None else f'Exp. {config.type_dataset} - {config.type_setting}'
         wandb.run.save()
         wandb.watch_called = False
 
-    vsm = VideoSumarizer(config, use_wandb)
-    vsm.train_cross_validation(pretrained_model)
+        if len(name_default.split('-'))>1:
+            vsm = VideoSumarizer(config, use_wandb)
+            vsm.train_cross_validation(pretrained_model)
+        else:
+            print("There are no enough features to train")
+    else:
+        vsm = VideoSumarizer(config, use_wandb)
+        vsm.train_cross_validation(pretrained_model)
+
 
 if __name__ == '__main__':
     use_sweep = sweep_config(sys.argv, '--use_sweep')

@@ -1,0 +1,38 @@
+{
+    "hparams": {
+        "learning_rate": 0.00005,
+        "weight_decay": 0.00001,
+        "epochs_max": 300,
+        "googlenet": true,
+        "resnext": false,
+        "inceptionv3": false,
+        "i3d_rgb": true,
+        "i3d_flow": true,
+        "resnet3d": false,
+        "type_dataset": "tvsum",
+        "type_setting": "aug",
+        "sameAccStopThres": 50,
+        "transformations_path": "/data/shuaman/video_summarization/datasets/processed_datasets/transformations.pk"
+    },
+    "datasets":{
+        "path_tvsum": "/data/shuaman/video_summarization/datasets/processed_datasets/eccv16_dataset_tvsum_google_pool5.h5",
+        "path_summe": "/data/shuaman/video_summarization/datasets/processed_datasets/eccv16_dataset_summe_google_pool5.h5",
+        "path_ovp": "/data/shuaman/video_summarization/datasets/processed_datasets/eccv16_dataset_ovp_google_pool5.h5",
+        "path_youtube": "/data/shuaman/video_summarization/datasets/processed_datasets/eccv16_dataset_youtube_google_pool5.h5",
+        "path_cosum": "/data/shuaman/video_summarization/datasets/processed_datasets/dataset_cosum_processed.h5"
+    },
+    "splits":{
+        "path_split_summe_canonical": "/home/shuaman/video_sm/video_summarization/splits/vasnet_splits/summe_splits.json",
+        "path_split_tvsum_canonical": "/home/shuaman/video_sm/video_summarization/splits/vasnet_splits/tvsum_splits.json",
+        "path_split_summe_aug": "/home/shuaman/video_sm/video_summarization/splits/vasnet_splits/summe_aug_splits.json",
+        "path_split_tvsum_aug": "/home/shuaman/video_sm/video_summarization/splits/vasnet_splits/tvsum_aug_splits.json",
+        "path_split_summe_non_overlap_ord": "/home/shuaman/video_sm/video_summarization/splits/msva_splits/summe_ordered_non_overlap_splits.json",
+        "path_split_summe_non_overlap_rand": "/home/shuaman/video_sm/video_summarization/splits/msva_splits/summe_random_non_overlap_splits.json",
+        "path_split_tvsum_non_overlap_ord": "/home/shuaman/video_sm/video_summarization/splits/msva_splits/tvsum_ordered_non_overlap_splits.json",
+        "path_split_tvsum_non_overlap_rand": "/home/shuaman/video_sm/video_summarization/splits/msva_splits/tvsum_random_non_overlap_splits.json"
+    },
+    "save_weights": true,
+    "num_backups": 2,
+    "path_saved_weights": "/data/shuaman/video_summarization/datasets/weights_trained/",
+    "weights_default": "weights_default"
+}
