@@ -5,10 +5,10 @@ from .self_attention import SelfAttention
 from .layer_norm import LayerNorm
 
 class MSVA(nn.Module):
-    def __init__(self):
+    def __init__(self, feature_len=1024):
         super(MSVA, self).__init__()    
-        self.att1_3 = SelfAttention(apperture=250, input_size=1024, output_size=1024,dropout=0.5)
-        self.ka1_3 = nn.Linear(in_features=1024 , out_features=365)
+        self.att1_3 = SelfAttention(apperture=250, input_size=feature_len, output_size=feature_len,dropout=0.5)
+        self.ka1_3 = nn.Linear(in_features=feature_len , out_features=365)
         self.kb = nn.Linear(in_features=self.ka1_3.out_features, out_features=365)
         self.kc = nn.Linear(in_features=self.kb.out_features, out_features=512)
         self.kd = nn.Linear(in_features=self.kc.out_features, out_features=1)
@@ -16,8 +16,8 @@ class MSVA(nn.Module):
         self.relu = nn.ReLU()
         self.dropout= nn.Dropout(0.5)
         self.softmax = nn.Softmax(dim=0)
-        self.layer_norm_y_1_3 = LayerNorm(1024)
-        self.layer_norm_y_4 = LayerNorm(1024)
+        self.layer_norm_y_1_3 = LayerNorm(feature_len)
+        self.layer_norm_y_4 = LayerNorm(feature_len)
         self.layer_norm_kc = LayerNorm(self.kc.out_features)
         self.layer_norm_kd = LayerNorm(self.kd.out_features)
 

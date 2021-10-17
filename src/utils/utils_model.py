@@ -46,7 +46,7 @@ def get_flags_features(feature1, feature2):
     return dict_use_feature     
 
 
-def get_dataloaders(dataset_paths, split, dict_use_feature, params, transformations_path):
+def get_dataloaders(dataset_paths, split, dict_use_feature, params, transformations_path=None):
     training_set = VSMDataset(dataset_paths, split=split, key_split="train_keys",
                                 googlenet=dict_use_feature["googlenet"],
                                 resnext=dict_use_feature["resnext"],

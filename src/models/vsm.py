@@ -21,7 +21,7 @@ class VideoSumarizer():
         self.msva = self.init_model()
 
     def init_model(self):
-        msva = MSVA()
+        msva = MSVA(feature_len=2048)
         msva.eval()
         msva.apply(weights_init)
         msva.to(self.device)
@@ -179,7 +179,8 @@ class VideoSumarizer():
 
         training_generator, test_generator = get_dataloaders(dataset_paths, split,
                                                             dict_use_feature, params,
-                                                            self.config.transformations_path)
+                                                            #self.config.transformations_path
+                                                            )
                                                             
         optimizer = init_optimizer(self.msva, self.config.learning_rate, self.config.weight_decay)
         criterion = torch.nn.MSELoss()
@@ -239,12 +240,13 @@ class VideoSumarizer():
                 sameCount=0
 
             if(sameCount>=self.config.sameAccStopThres):
-                path_save_epoch = os.path.join(path_saved_weights, f'epoch_stopthreshold')
-                try:
-                    os.mkdir(path_save_epoch)
-                except OSError:
-                    pass
-                save_weights(self.msva, path_save_epoch, self.use_wandb)
+                if self.config.save_weights:
+                    path_save_epoch = os.path.join(path_saved_weights, f'epoch_stopthreshold')
+                    try:
+                        os.mkdir(path_save_epoch)
+                    except OSError:
+                        pass
+                    save_weights(self.msva, path_save_epoch, self.use_wandb)
                 break
 
         if self.use_wandb and (split is None):
