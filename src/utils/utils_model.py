@@ -79,7 +79,7 @@ def init_optimizer(model, learning_rate, weight_decay):
 def get_paths(type_dataset,type_setting, path_tvsum, 
             path_summe, path_ovp, path_youtube, path_cosum):
 
-    if type_setting in ("transfer", "aug"):
+    if type_setting in ("transfer", "aug", "non_overlap_ord_aug", "non_overlap_rand_aug"):
         paths = [
                 path_tvsum,
                 path_summe,

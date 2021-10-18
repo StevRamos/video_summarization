@@ -93,6 +93,13 @@ def configure_model(config_file, use_wandb):
         path_split_tvsum_non_overlap_ord = config_file["splits"]["path_split_tvsum_non_overlap_ord"],
         path_split_tvsum_non_overlap_rand = config_file["splits"]["path_split_tvsum_non_overlap_rand"],
 
+        path_split_summe_non_overlap_ord_aug = config_file["splits"]["path_split_summe_non_overlap_ord_aug"],
+        path_split_summe_non_overlap_rand_aug = config_file["splits"]["path_split_summe_non_overlap_rand_aug"],
+        path_split_tvsum_non_overlap_ord_aug = config_file["splits"]["path_split_tvsum_non_overlap_ord_aug"],
+        path_split_tvsum_non_overlap_rand_aug = config_file["splits"]["path_split_tvsum_non_overlap_rand_aug"],
+        path_split_summe_transfer = config_file["splits"]["path_split_summe_transfer"],
+        path_split_tvsum_transfer = config_file["splits"]["path_split_tvsum_transfer"],
+
         save_weights = config_file["save_weights"],
         num_backups = config_file["num_backups"],
         path_saved_weights = config_file["path_saved_weights"],
