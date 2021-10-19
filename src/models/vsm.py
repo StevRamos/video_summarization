@@ -21,7 +21,7 @@ class VideoSumarizer():
         self.msva = self.init_model()
 
     def init_model(self):
-        msva = MSVA(feature_len=2048)
+        msva = MSVA(feature_len=self.config.feature_len)
         msva.eval()
         msva.apply(weights_init)
         msva.to(self.device)

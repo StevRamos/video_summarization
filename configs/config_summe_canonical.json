@@ -28,8 +28,14 @@
         "path_split_tvsum_aug": "/home/shuaman/video_sm/video_summarization/splits/vsm_splits/tvsum_aug_splits.json",
         "path_split_summe_non_overlap_ord": "/home/shuaman/video_sm/video_summarization/splits/msva_splits/summe_ordered_non_overlap_splits.json",
         "path_split_summe_non_overlap_rand": "/home/shuaman/video_sm/video_summarization/splits/msva_splits/summe_random_non_overlap_splits.json",
+        "path_split_summe_non_overlap_ord_aug": "/home/shuaman/video_sm/video_summarization/splits/vsm_splits/summe_ordered_non_overlap_splits_aug.json",
+        "path_split_summe_non_overlap_rand_aug": "/home/shuaman/video_sm/video_summarization/splits/vsm_splits/summe_random_non_overlap_splits_aug.json",
         "path_split_tvsum_non_overlap_ord": "/home/shuaman/video_sm/video_summarization/splits/msva_splits/tvsum_ordered_non_overlap_splits.json",
-        "path_split_tvsum_non_overlap_rand": "/home/shuaman/video_sm/video_summarization/splits/msva_splits/tvsum_random_non_overlap_splits.json"
+        "path_split_tvsum_non_overlap_rand": "/home/shuaman/video_sm/video_summarization/splits/msva_splits/tvsum_random_non_overlap_splits.json",
+        "path_split_tvsum_non_overlap_ord_aug": "/home/shuaman/video_sm/video_summarization/splits/vsm_splits/tvsum_ordered_non_overlap_splits_aug.json",
+        "path_split_tvsum_non_overlap_rand_aug": "/home/shuaman/video_sm/video_summarization/splits/vsm_splits/tvsum_random_non_overlap_splits_aug.json",
+        "path_split_summe_transfer": "/home/shuaman/video_sm/video_summarization/splits/vsm_splits/summe_transfer.json",
+        "path_split_tvsum_transfer": "/home/shuaman/video_sm/video_summarization/splits/vsm_splits/tvsum_transfer.json"    
     },
     "save_weights": true,
     "num_backups": 2,

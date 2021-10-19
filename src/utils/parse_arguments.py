@@ -64,6 +64,7 @@ def parse_arguments_train():
 def configure_model(config_file, use_wandb):
     config_file = parse_configuration(config_file)
     config = dict(
+        feature_len = config_file["hparams"]["feature_len"],
         learning_rate = config_file["hparams"]["learning_rate"],
         weight_decay = config_file["hparams"]["weight_decay"],
         epochs_max = config_file["hparams"]["epochs_max"],

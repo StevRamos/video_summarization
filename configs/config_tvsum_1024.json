@@ -1,5 +1,6 @@
 {
     "hparams": {
+        "feature_len": 1024,
         "learning_rate": 0.00005,
         "weight_decay": 0.00001,
         "epochs_max": 300,
@@ -35,9 +36,9 @@
         "path_split_tvsum_non_overlap_ord_aug": "/home/shuaman/video_sm/video_summarization/splits/vsm_splits/tvsum_ordered_non_overlap_splits_aug.json",
         "path_split_tvsum_non_overlap_rand_aug": "/home/shuaman/video_sm/video_summarization/splits/vsm_splits/tvsum_random_non_overlap_splits_aug.json",
         "path_split_summe_transfer": "/home/shuaman/video_sm/video_summarization/splits/vsm_splits/summe_transfer.json",
-        "path_split_tvsum_transfer": "/home/shuaman/video_sm/video_summarization/splits/vsm_splits/tvsum_transfer.json"    
+        "path_split_tvsum_transfer": "/home/shuaman/video_sm/video_summarization/splits/vsm_splits/tvsum_transfer.json"
     },
-    "save_weights": true,
+    "save_weights": false,
     "num_backups": 2,
     "path_saved_weights": "/data/shuaman/video_summarization/datasets/weights_trained/",
     "weights_default": "weights_default"
