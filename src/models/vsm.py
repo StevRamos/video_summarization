@@ -177,9 +177,10 @@ class VideoSumarizer():
                 'num_workers': 4
                 }
 
+        transformations_path = self.config.transformations_path if self.config.feature_len==1024 else None
         training_generator, test_generator = get_dataloaders(dataset_paths, split,
                                                             dict_use_feature, params,
-                                                            #self.config.transformations_path
+                                                            transformations_path
                                                             )
                                                             
         optimizer = init_optimizer(self.msva, self.config.learning_rate, self.config.weight_decay)

@@ -1,6 +1,7 @@
 import torch 
 import h5py
 import pickle
+from sklearn import preprocessing
 
 class VSMDataset(torch.utils.data.Dataset):
     """Video Summarizer Dataset
@@ -93,6 +94,11 @@ class VSMDataset(torch.utils.data.Dataset):
                     if "features_3D" in self.data[iterator_videos].keys():
                         features_3D = self.data[iterator_videos]["features_3D"]
                         self.data[iterator_videos]["features_3D"] = transformations["pca_3D"].transform(transformations["normalizer_3D"].transform(features_3D))
+
+                #apply l2norm equal to 1 for each vector
+                features_to_normalize = [key for key in self.data[iterator_videos].keys() if 'features' in key]
+                for feat in features_to_normalize:
+                    self.data[iterator_videos][feat] = preprocessing.normalize(self.data[iterator_videos][feat], norm='l2')
                     
                 iterator_videos = iterator_videos + 1
                 
