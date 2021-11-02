@@ -1,4 +1,6 @@
 import os
+import math
+from itertools import groupby
 
 import cv2
 import numpy as np
@@ -7,10 +9,15 @@ import torchvision
 import wandb
 from tqdm import tqdm
 from scipy.stats import kendalltau, spearmanr, rankdata
+from sklearn import preprocessing
+import pickle
 
 from .msva import MSVA
 from src.utils import weights_init, generate_summary, evaluate_summary, save_weights 
 from src.utils import get_flags_features, get_dataloaders, get_paths, init_optimizer, parse_configuration
+from src.KTS.cpd_auto import cpd_auto
+from .CNN import ResNet, GoogleNet, Inception
+from .CNN3D import I3D, ResNet3D
 
 class VideoSumarizer():
     def __init__(self, config, use_wandb):
@@ -33,7 +40,160 @@ class VideoSumarizer():
     def load_weights(self, weights_path):
         self.msva.load_state_dict(torch.load(weights_path, 
                                             map_location=torch.device(self.device)))
-    
+
+    def _get_model_frame_feature(self, resnet=True, inception=True, googlenet=True):
+        image_models = {}
+        if resnet:
+            resnet = ResNet(self.device)
+            image_models["resnet"] = resnet.eval()
+        if inception:
+            inception = Inception(self.device)
+            image_models["inception"] = inception.eval()
+        if googlenet:
+            googlenet = GoogleNet(self.device)
+            image_models["googlenet"] = googlenet.eval()
+        return image_models
+
+    def _get_model_video(self, path_weights_flow, path_weights_rgb, paht_weights_r3d101_KM):
+        i3d = I3D(self.device, path_weights_flow, path_weights_rgb)
+        i3d = i3d.eval()
+        resnet3D = ResNet3D(device=self.device, path_weights=paht_weights_r3d101_KM)
+        resnet3D = resnet3D.eval()
+        video_models = {
+            "i3d": i3d,
+            "resnet3D": resnet3D,
+        }
+        return video_models
+
+    def load_weights_descriptor_models(self, 
+                                       weights_path="/home/shuaman/video_sm/video_summarization/pretrained_models/tvsum_random_non_overlap_0.6271.tar.pth", 
+                                       path_weights_flow="/data/shuaman/video_summarization/datasets/pytorch-i3d/models/flow_imagenet.pt",
+                                       paht_weights_r3d101_KM="/data/shuaman/video_summarization/datasets/3D-ResNets-PyTorch/weights/r3d101_KM_200ep.pth"
+                                       ):
+        self.load_weights(weights_path)
+        self.image_models = self._get_model_frame_feature(resnet=self.config.resnext, inception=self.config.inceptionv3, googlenet=self.config.googlenet)
+        self.video_models = self._get_model_video(path_weights_flow=path_weights_flow, path_weights_rgb=None,
+                                                paht_weights_r3d101_KM=paht_weights_r3d101_KM)
+        transformations_path = self.config.transformations_path if self.config.feature_len==1024 else None
+        self.transformations = pickle.load(open(transformations_path, 'rb'))
+
+    def _extract_feature(self, frame):
+        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        frame_feat = {}
+        for model in self.image_models.keys():
+            frame_feat[model] = self.image_models[model](frame) 
+        return frame_feat
+
+    def _extract_video_feature(self, frame_resized, flow_frames):
+        _, features_flow = self.video_models["i3d"](frame_resized, flow_frames)
+        features_3D = self.video_models["resnet3D"](frame_resized)
+        return _, features_flow, features_3D
+
+    def _get_change_points(self, video_feat, n_frame, fps):
+        video_feat = video_feat.astype(np.float32)
+        seq_len = len(video_feat)
+        n_frames = n_frame
+        m = int(np.ceil(seq_len/10 - 1))
+        kernel = np.matmul(video_feat, video_feat.T)
+        change_points, _ = cpd_auto(kernel, m, 1, verbose=False)
+        change_points *= 15
+        change_points = np.hstack((0, change_points, n_frames))
+        begin_frames = change_points[:-1]
+        end_frames = change_points[1:]
+        change_points = np.vstack((begin_frames, end_frames - 1)).T
+        n_frame_per_seg = end_frames - begin_frames
+        return change_points, n_frame_per_seg
+
+    def _process_video(self, video_source):
+        video_capture = cv2.VideoCapture(video_source)
+        fps = video_capture.get(cv2.CAP_PROP_FPS)
+        n_frames = int(video_capture.get(cv2.CAP_PROP_FRAME_COUNT))
+
+        frame_list = []
+        picks = []
+        video_feat_for_train = []
+        n_frames = 0
+
+        while True:
+            success, frame = video_capture.read()
+            if not success:
+                break
+            if n_frames % 15 == 0:
+                frame_feat = self._extract_feature(frame)
+                picks.append(n_frames)
+                video_feat_for_train.append(frame_feat)
+            frame_list.append(frame)
+            n_frames += 1
+        
+        video_capture.release()
+        rate = math.ceil(n_frames/8500)
+        frame_list = frame_list[::rate]
+        frame_resized = [cv2.resize(frame, (224, 224)) for frame in frame_list]
+        flow_frames = [cv2.cvtColor(frame,cv2.COLOR_BGR2GRAY) for frame in frame_resized]
+        print("flow optical")
+        flow_frames = np.array([cv2.calcOpticalFlowFarneback(flow_frames[i],flow_frames[i+15], None, 0.5, 3, 15, 3, 5, 1.2, 0) for i in range(len(flow_frames)) if i+16<=len(flow_frames) ])
+
+        rate = 15
+        frame_resized = frame_resized[::rate]
+        flow_frames = flow_frames[::rate]
+        _, features_flow, features_3D = self._extract_video_feature(frame_resized, flow_frames)
+        features_3D = self.transformations["pca_3D"].transform(self.transformations["normalizer_3D"].transform(features_3D))
+        features_3D = preprocessing.normalize(features_3D, norm='l2')
+
+        video_feat_for_train_googlenet = np.array([feature["googlenet"] for feature in video_feat_for_train])
+
+        video_feat_for_train_resnet = np.array([feature["resnet"] for feature in video_feat_for_train])
+        video_feat_for_train_resnet = self.transformations["pca_rn"].transform(self.transformations["normalizer_rn"].transform(video_feat_for_train_resnet))
+        video_feat_for_train_resnet = preprocessing.normalize(video_feat_for_train_resnet, norm='l2')
+        #n_frames = user_score.shape[1]
+        print("calculatin change points")
+        change_points, n_frame_per_seg = self._get_change_points(video_feat_for_train_googlenet, n_frames, fps)
+        
+        return n_frames, video_feat_for_train_googlenet, video_feat_for_train_resnet, features_flow, features_3D, np.array(change_points), n_frame_per_seg, np.array(picks)
+
+
+    def infer(self, video_source, video_saved="output.mp4", proportion=0.15):
+        self.msva.eval()
+        print("processing video")
+        n_frames, video_feat_for_train_googlenet, video_feat_for_train_resnet, features_flow, features_3D, change_points, n_frame_per_seg, picks = self._process_video(video_source)
+        print("forward prop")
+        with torch.no_grad():
+            features = [video_feat_for_train_googlenet, video_feat_for_train_resnet, features_flow, features_3D]
+            shape_desire = video_feat_for_train_googlenet.shape[0]
+            features = [cv2.resize(feature, (feature.shape[1],shape_desire), interpolation = cv2.INTER_AREA) for feature in features]
+            features = [torch.from_numpy(feature).unsqueeze(0) for feature in features]
+            features = [feature.float().to(self.device) for feature in features]
+            y, _ = self.msva(features, shape_desire)
+            summary = y[0].detach().cpu().numpy()
+            machine_summary = generate_summary(summary, change_points,n_frames, 
+                                                n_frame_per_seg, picks, proportion)
+        print("generating summary")
+        cap = cv2.VideoCapture(video_source)
+        width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+        height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        fps = cap.get(cv2.CAP_PROP_FPS)
+
+        fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+        out = cv2.VideoWriter(video_saved, fourcc, fps, (width, height))
+
+        frame_idx = 0
+        n_frames_spotlight = 0
+        while True:
+            ret, frame = cap.read()
+            if not ret:
+                break
+            if machine_summary[frame_idx]:
+                out.write(frame)
+                n_frames_spotlight += 1
+            frame_idx += 1
+        
+        out.release()
+        cap.release()
+
+        n_segments = len([sum(g) for i, g in groupby(machine_summary) if i == 1])
+
+        return os.path.getsize(video_source), width, height, fps, n_frames/fps, n_frames_spotlight/fps, n_segments
+        
     def train_step(self, training_generator, criterion, optimizer):
         self.msva.train()
 

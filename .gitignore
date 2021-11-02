@@ -136,3 +136,4 @@ src/*.out
 notebooks/*.pk
 *.out
 wandb/
+*.mp4
