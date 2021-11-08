@@ -106,6 +106,8 @@ class VideoSumarizer():
 
     def _process_video(self, video_source):
         video_capture = cv2.VideoCapture(video_source)
+        width = int(video_capture.get(cv2.CAP_PROP_FRAME_WIDTH))
+        height = int(video_capture.get(cv2.CAP_PROP_FRAME_HEIGHT))
         fps = video_capture.get(cv2.CAP_PROP_FPS)
         n_frames = int(video_capture.get(cv2.CAP_PROP_FRAME_COUNT))
 
@@ -149,13 +151,17 @@ class VideoSumarizer():
         print("calculatin change points")
         change_points, n_frame_per_seg = self._get_change_points(video_feat_for_train_googlenet, n_frames, fps)
         
-        return n_frames, video_feat_for_train_googlenet, video_feat_for_train_resnet, features_flow, features_3D, np.array(change_points), n_frame_per_seg, np.array(picks)
+        return fps, width, height, n_frames, video_feat_for_train_googlenet, video_feat_for_train_resnet, features_flow, features_3D, np.array(change_points), n_frame_per_seg, np.array(picks)
 
 
-    def infer(self, video_source, video_saved="output.mp4", proportion=0.15):
+    def summarize_video(self, video_source):
         self.msva.eval()
         print("processing video")
-        n_frames, video_feat_for_train_googlenet, video_feat_for_train_resnet, features_flow, features_3D, change_points, n_frame_per_seg, picks = self._process_video(video_source)
+        fps, width, height, n_frames, video_feat_for_train_googlenet, video_feat_for_train_resnet, features_flow, features_3D, change_points, n_frame_per_seg, picks = self._process_video(video_source)
+        
+        video_name = video_source.split('/')[-1]
+        tam = os.path.getsize(video_source)
+
         print("forward prop")
         with torch.no_grad():
             features = [video_feat_for_train_googlenet, video_feat_for_train_resnet, features_flow, features_3D]
@@ -165,8 +171,13 @@ class VideoSumarizer():
             features = [feature.float().to(self.device) for feature in features]
             y, _ = self.msva(features, shape_desire)
             summary = y[0].detach().cpu().numpy()
-            machine_summary = generate_summary(summary, change_points,n_frames, 
-                                                n_frame_per_seg, picks, proportion)
+
+        return video_name, tam, width, height, fps, n_frames/fps, summary, change_points, n_frames, n_frame_per_seg, picks
+
+    def generate_summary_proportion(self, video_source, summary, change_points, 
+                                    n_frames, n_frame_per_seg, picks, proportion, video_saved="output.mp4"):
+        machine_summary = generate_summary(summary, change_points, n_frames, 
+                                            n_frame_per_seg, picks, proportion)
         print("generating summary")
         cap = cv2.VideoCapture(video_source)
         width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
@@ -192,7 +203,16 @@ class VideoSumarizer():
 
         n_segments = len([sum(g) for i, g in groupby(machine_summary) if i == 1])
 
-        return os.path.getsize(video_source), width, height, fps, n_frames/fps, n_frames_spotlight/fps, n_segments
+        return n_frames_spotlight/fps, n_segments
+
+
+    def infer(self, video_source, video_saved="output.mp4", proportion=0.15):
+
+        video_name, tam, res_w, res_h, fps, dur_orig, summary, change_points, n_frames, n_frame_per_seg, picks = self.summarize_video(video_source)
+        dur_spotlight, n_segments = self.generate_summary_proportion(video_source, summary, change_points, 
+                                                                        n_frames, n_frame_per_seg, picks, proportion, video_saved)
+
+        return video_name, tam, res_w, res_h, fps, dur_orig, dur_spotlight, n_segments
         
     def train_step(self, training_generator, criterion, optimizer):
         self.msva.train()
