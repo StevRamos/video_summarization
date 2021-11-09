@@ -137,3 +137,4 @@ notebooks/*.pk
 *.out
 wandb/
 *.mp4
+*.pk
