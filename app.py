@@ -41,11 +41,15 @@ config = configure_model(config_file, use_wandb)
 weights_path = "weights_model//tvsum_random_non_overlap_0.6271.tar.pth"
 path_weights_flow = "weights_model/flow_imagenet.pt"
 paht_weights_r3d101_KM = "weights_model/r3d101_KM_200ep.pth"
+transformations_path = "weights_model/transformations.pk"
 vsm = VideoSumarizer(config, use_wandb)
 vsm.load_weights_descriptor_models(weights_path=weights_path,
                                     path_weights_flow=path_weights_flow,
-                                    paht_weights_r3d101_KM=paht_weights_r3d101_KM)
+                                    paht_weights_r3d101_KM=paht_weights_r3d101_KM,
+                                    transformations_path=transformations_path)
 #END video sm
+
+PATH_DATA = tempfile.gettempdir()
 
 origins = ["*"]
 
@@ -125,19 +129,21 @@ class SummaryresponseBase(BaseModel):
 def summarize_video(
     video: UploadFile = File(...)
 ):
-    with open(os.path.join(tempfile.gettempdir(), video.filename), "wb") as buffer:
+    with open(os.path.join(PATH_DATA, video.filename), "wb") as buffer:
         shutil.copyfileobj(video.file, buffer)
 
     video_filename = video.filename
-    path_data = tempfile.gettempdir()
-    path_video = os.path.join(path_data, video_filename)
+    path_video = os.path.join(PATH_DATA, video_filename)
     
     #SAVE IN GOOGLE DRIVE
-    file_video_ids = GAPI.upload_files([video_filename], path_data, PARENT_FOLDERID_VIDEO_INPUT)
+    file_video_ids = GAPI.upload_files([video_filename], PATH_DATA, PARENT_FOLDERID_VIDEO_INPUT)
     video_id = file_video_ids[video_filename]
 
     #START video sm
-    video_name, tam, res_w, res_h, fps, dur_orig, summary, change_points, n_frames, n_frame_per_seg, picks = vsm.summarize_video(path_video)
+    #video_name, tam, res_w, res_h, fps, dur_orig, summary, change_points, n_frames, n_frame_per_seg, picks = vsm.summarize_video(path_video)
+    video_name, tam, res_w, res_h, fps, dur_orig = "v71.avi", 16553384, 320, 240, 29.916666666666668, 275.0306406685237
+    dummy_summary = pickle.load(open("dummy.pk", 'rb'))
+    summary, change_points, n_frames, n_frame_per_seg, picks = dummy_summary['summary'], dummy_summary['change_points'], dummy_summary['n_frames'], dummy_summary['n_frame_per_seg'], dummy_summary['picks']
     os.remove(path_video)
 
     dict_summary = {
@@ -148,9 +154,9 @@ def summarize_video(
         "picks": picks
     }
     filename_dict_summmary = f'{video_filename}_{video_id}.pk'
-    path_dict_summmary = os.path.join(path_data, filename_dict_summmary)
+    path_dict_summmary = os.path.join(PATH_DATA, filename_dict_summmary)
     pickle.dump(dict_summary, open(path_dict_summmary, 'wb'))
-    file_summary_ids = GAPI.upload_files([filename_dict_summmary], path_data, PARENT_FOLDERID_SUMMARY_OUTPUT)
+    file_summary_ids = GAPI.upload_files([filename_dict_summmary], PATH_DATA, PARENT_FOLDERID_SUMMARY_OUTPUT)
     summary_id = file_summary_ids[filename_dict_summmary]
     os.remove(path_dict_summmary)
 
@@ -184,28 +190,27 @@ def get_spotlight(
         example="0.15"
     )
 ):
-    path_data = tempfile.gettempdir()
     file_video_ids = {f'{video_id}.mp4': video_id}
     file_summary_ids = {f'{summary_id}.pk': summary_id}
-    correct_video = GAPI.download_file(file_video_ids, path_data)
-    correct_summary = GAPI.download_file(file_summary_ids, path_data)
+    correct_video = GAPI.download_file(file_video_ids, PATH_DATA)
+    correct_summary = GAPI.download_file(file_summary_ids, PATH_DATA)
 
-    dict_summary = pickle.load(open(os.path.join(path_data, f'{summary_id}.pk'), 'rb'))
+    dict_summary = pickle.load(open(os.path.join(PATH_DATA, f'{summary_id}.pk'), 'rb'))
     summary = dict_summary['summary']
     change_points = dict_summary['change_points']
     n_frames = dict_summary['n_frames']
     n_frame_per_seg = dict_summary['n_frame_per_seg']
     picks = dict_summary['picks']
-    os.remove(os.path.join(path_data, f'{summary_id}.pk'))
+    os.remove(os.path.join(PATH_DATA, f'{summary_id}.pk'))
 
-    dur_spotlight, n_segments = vsm.generate_summary_proportion(os.path.join(path_data, f'{video_id}.mp4'),
+    dur_spotlight, n_segments = vsm.generate_summary_proportion(os.path.join(PATH_DATA, f'{video_id}.mp4'),
                                         summary, change_points, n_frames, n_frame_per_seg, picks, proportion,
-                                        os.path.join(path_data, f'{video_id}_spl.mp4'))
-    os.remove(os.path.join(path_data, f'{video_id}.mp4'))
+                                        os.path.join(PATH_DATA, f'{video_id}_spl.mp4'))
+    os.remove(os.path.join(PATH_DATA, f'{video_id}.mp4'))
 
-    file_spotlight_ids = GAPI.upload_files([f'{video_id}_spl.mp4'], path_data, PARENT_FOLDERID_SPOTLIGHT_OUTPUT)
+    file_spotlight_ids = GAPI.upload_files([f'{video_id}_spl.mp4'], PATH_DATA, PARENT_FOLDERID_SPOTLIGHT_OUTPUT)
     spotlight_id = file_spotlight_ids[f'{video_id}_spl.mp4']
-    os.remove(os.path.join(path_data, f'{video_id}_spl.mp4'))
+    os.remove(os.path.join(PATH_DATA, f'{video_id}_spl.mp4'))
 
     summary_response = SummaryresponseBase(dur_spotlight=dur_spotlight, n_segments=n_segments, spotlight_id=spotlight_id)
     return summary_response
@@ -228,31 +233,12 @@ async def download_spotlight(
 ):  
     def remove_file(path: str):
         os.unlink(path)
-
-    path_data = tempfile.gettempdir()    
+ 
     file_spotlight_ids = {f'{spotlight_id}.mp4': spotlight_id}
 
-    stream = GAPI.download_file(file_spotlight_ids, path_data)
-    spotlight_path = os.path.join(path_data, f'{spotlight_id}.mp4')
+    stream = GAPI.download_file(file_spotlight_ids, PATH_DATA)
+    spotlight_path = os.path.join(PATH_DATA, f'{spotlight_id}.mp4')
     
     file_response = FileResponse(spotlight_path)
     background_tasks.add_task(remove_file, spotlight_path)
     return file_response
-
-"""    
-    #path = "/home/stevramos/Downloads"
-    #video_path = os.path.join(path, "dummy.mp4")
-    #file_response = FileResponse(video_path)
-    #return file_response
-    idxd = "1-ifIWxTaU_Z0-t55u0WOXpRIMtTjbmaF"
-    file_ids = {f'{idxd}.mp4': idxd}
-    path = "./"
-    stream = GAPI.download_file(file_ids, path)
-    video_path = os.path.join(path, f'{idxd}.mp4')
-    file_response = FileResponse(video_path)
-    #some_file_path = os.path.join(path, "1_JweXPmlrc0ibYUq7Pg3NsOfgCE2jG2p.mp4")
-    ##streaming_response = StreamingResponse(iterfile(some_file_path))
-    #streaming_response = StreamingResponse(stream)
-    background_tasks.add_task(remove_file, video_path)
-    return file_response
-"""
