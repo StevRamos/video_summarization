@@ -142,3 +142,4 @@ wandb/
 client_secret_vsm_api.json
 dummy.py
 token_drive_v3.pickle
+*.pk
