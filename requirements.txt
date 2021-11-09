@@ -35,3 +35,6 @@ wandb==0.12.4
 fastapi==0.63.0
 uvicorn==0.13.2
 python-multipart==0.0.5
+google-auth-oauthlib==0.4.4 
+google-api-python-client==2.8.0
+google-auth-httplib2==0.1.0
