@@ -140,10 +140,10 @@ def summarize_video(
     video_id = file_video_ids[video_filename]
 
     #START video sm
-    #video_name, tam, res_w, res_h, fps, dur_orig, summary, change_points, n_frames, n_frame_per_seg, picks = vsm.summarize_video(path_video)
-    video_name, tam, res_w, res_h, fps, dur_orig = "v71.avi", 16553384, 320, 240, 29.916666666666668, 275.0306406685237
-    dummy_summary = pickle.load(open("dummy.pk", 'rb'))
-    summary, change_points, n_frames, n_frame_per_seg, picks = dummy_summary['summary'], dummy_summary['change_points'], dummy_summary['n_frames'], dummy_summary['n_frame_per_seg'], dummy_summary['picks']
+    video_name, tam, res_w, res_h, fps, dur_orig, summary, change_points, n_frames, n_frame_per_seg, picks = vsm.summarize_video(path_video)
+    #video_name, tam, res_w, res_h, fps, dur_orig = "v71.avi", 16553384, 320, 240, 29.916666666666668, 275.0306406685237
+    #dummy_summary = pickle.load(open("dummy.pk", 'rb'))
+    #summary, change_points, n_frames, n_frame_per_seg, picks = dummy_summary['summary'], dummy_summary['change_points'], dummy_summary['n_frames'], dummy_summary['n_frame_per_seg'], dummy_summary['picks']
     os.remove(path_video)
 
     dict_summary = {
