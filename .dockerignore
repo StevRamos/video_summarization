@@ -140,7 +140,7 @@ wandb/
 *.jpg
 
 dummy.py
-*.pk
+#*.pk
 
 pretrained_models/
 notebooks/
