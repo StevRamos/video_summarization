@@ -11,7 +11,8 @@ from pydantic import Field
 from fastapi import FastAPI
 from fastapi import Body, Query, UploadFile, File
 from fastapi import status
-from fastapi.middleware.cors import CORSMiddleware
+#from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, StreamingResponse
 
 #Other
@@ -25,6 +26,18 @@ from src.models import VideoSumarizer
 from src.utils import configure_model
 
 app = FastAPI()
+
+origins = ["*"]
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+    expose_headers=["*"]
+)
+
+
 GAPI = GoogleAPI()
 
 #PATHS - GOOGLE DRIVE
@@ -51,15 +64,7 @@ vsm.load_weights_descriptor_models(weights_path=weights_path,
 
 PATH_DATA = tempfile.gettempdir()
 
-origins = ["*"]
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 
 class VideoresponseBase(BaseModel):
     video_name: str = Field(
