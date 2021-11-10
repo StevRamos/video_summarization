@@ -147,5 +147,5 @@ notebooks/
 splits/
 scripts/
 
-configs/
-weights_model/
+#configs/
+#weights_model/
