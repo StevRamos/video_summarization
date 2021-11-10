@@ -12,7 +12,7 @@ RUN wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh \
 
 RUN conda update -n base -c defaults conda
 
-RUN conda create -y -n "vsm" python=3.8.11
+RUN conda create -y -n vsm python=3.8.11
 
 COPY . src/
 RUN /bin/bash -c "cd src \
