@@ -11,8 +11,8 @@ from pydantic import Field
 from fastapi import FastAPI
 from fastapi import Body, Query, UploadFile, File
 from fastapi import status
-#from fastapi.middleware.cors import CORSMiddleware
-from starlette.middleware.cors import CORSMiddleware
+from fastapi.middleware.cors import CORSMiddleware
+#from starlette.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, StreamingResponse
 
 #Other
@@ -33,8 +33,7 @@ app.add_middleware(
     allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
-    allow_headers=["*"],
-    expose_headers=["*"]
+    allow_headers=["*"]
 )
 
 
