@@ -5,6 +5,7 @@ conda create -y -n vsm python=3.8.11
 echo 'Installing packages ...'
 conda activate vsm
 pip install -r requirements.txt
+pip install gshell
 
 echo 'Downloading weights of the model ...'
 mkdir weights_model
