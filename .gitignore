@@ -137,7 +137,6 @@ notebooks/*.pk
 *.out
 wandb/
 *.mp4
-*.jpg
 
 client_secret_vsm_api.json
 dummy.py
