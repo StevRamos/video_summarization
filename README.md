@@ -13,6 +13,7 @@ More about gshell: https://pypi.org/project/gshell/
 ## <strong>System requirements</strong>
 * I strongly recomend Linux for performance and compatibility.
 * Python 3.8.11 is recomended due to library versions.
+* I suggest creating a new virtal environment:`conda create -y -n vsm python=3.8.11`
 * To install the libraries, I used PIP
 * GPU is not mandatory, but it speeds up training time
 * `N_CUDA` environment variable is defined to choose the GPU in case of having more than one
@@ -140,19 +141,16 @@ I trained the MSVA model with original features
 * F1 Score SumMe: <strong>0.476</strong>
 * F1 Score TVSum: <strong>0.594</strong>
 <div align="center">
-  <img width="400" alt="summe baseline model" src="img/summe_baselinemodel.jpg">
-  <img width="400" alt="tvsum baseline model" src="img/tvsum_baselinemodel.jpg">
+  <img width="400" alt="summe baseline model" src="utils/summe_baselinemodel.jpg">
+  <img width="400" alt="tvsum baseline model" src="utils/tvsum_baselinemodel.jpg">
 </div>
 
 #### <strong>Grid Search</strong>
 I trained 64 times the model with different features extracted before to see which one contributes more. Coincidentally, in both sets of videos one of the combinations with the best performance is the use of descriptors GoogleNet, ResNext, I3D FLOW and ResNet3D.
 
-To train the model, run the following code:
-
-
 <div align="center">
-  <img width="400" alt="summe feature influence" src="img/summe_feature_influence.jpg">
-  <img width="400" alt="tvsum feature influence" src="img/tvsum_feature_influence.jpg">
+  <img width="400" alt="summe feature influence" src="utils/summe_feature_influence.jpg">
+  <img width="400" alt="tvsum feature influence" src="utils/tvsum_feature_influence.jpg">
 </div>
 
 #### <strong>GoogleNet, ResNext, I3D FLOW and ResNet3D VS GoogleNet, I3D RGB e I3D FLOW</strong>
@@ -161,8 +159,8 @@ It can be observed that the model with the new descriptors, in both cases SumMe 
 Note: The comparison was done in one split in the images shown below.
 
 <div align="center">
-  <img width="400" alt="summe f1score one partition" src="img/summe_f1score_onepartition.jpg">
-  <img width="400" alt="tvsum f1score one partition" src="img/tvsum_f1score_onepartition.jpg">
+  <img width="400" alt="summe f1score one partition" src="utils/summe_f1score_onepartition.jpg">
+  <img width="400" alt="tvsum f1score one partition" src="utils/tvsum_f1score_onepartition.jpg">
 </div>
 
 Comparison of F1-Score with the baseline model under Canonical, Augmented and Transfer settings.
@@ -171,7 +169,20 @@ Model                      | SumMe<br/>Canonical| SumMe<br/>Augmented| SumMe<br/
 --------                   |---  |--------|--------|--------|--------|--------                 
 Baseline model             | 0.476 | -   | - | 0.594 | - | -
 Model with new descriptors | <strong>0.499</strong> | 0.48 | 0.43   | <strong>0.613</strong> | 0.62 | 0.57
-        
+   
+## <strong>API</strong>
+I developed a REST API (app.py) using the FastAPI framework which provides several services:
+1. `summarize-video`: receives a video and save it on GoogleDrive, after that summarize it (with score between 0 - 1)
+2. `get-spotlight`: receives a proportion of time that the user wants the summary video to be
+3. `download-spotlight`: download the summary video
+
+To run the app:
+```bash
+uvicorn app:app --reload --host 0.0.0.0
+```
+
+This app is used by the following front app https://github.com/StevRamos/video_summarization_app
+
 ## <strong>Acknowledgments</strong>
 I would like to thank the following repositories for releasing the evaluation code / data / splits / metrics that made my research possible.
 

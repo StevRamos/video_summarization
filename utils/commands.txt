@@ -1,0 +1,104 @@
+to execute generate dataset:
+
+(tvsum): example of the new generate_dataset.py
+N_CUDA=3 python3 generate_dataset.py --videospath /data/shuaman/video_summarization/datasets/raw_datasets/TVsum/ydata-tvsum50-v1_1/video/ --groundtruthpath /data/shuaman/video_summarization/datasets/raw_datasets/TVsum/ydata-tvsum50-v1_1/matlab/ydata-tvsum50.mat --dataset tvsum --pathweightsflow /data/shuaman/video_summarization/weights_model/flow_imagenet.pt --pathweightsrgb /data/shuaman/video_summarization/weights_model/rgb_imagenet.pt --pahtweightsr3d101KM /data/shuaman/video_summarization/weights_model/r3d101_KM_200ep.pth
+
+cosum (out.log)
+bash> N_CUDA=3 nohup python3 generate_dataset.py --videospath /data/shuaman/video_summarization/datasets/raw_datasets/CoSum/videos/ --groundtruthpath /data/shuaman/video_summarization/datasets/raw_datasets/CoSum/ --dataset cosum > cosum.log &
+
+tvsum
+bash> N_CUDA=3 nohup python3 generate_dataset.py --videospath /data/shuaman/video_summarization/datasets/raw_datasets/TVsum/ydata-tvsum50-v1_1/video/ --groundtruthpath /data/shuaman/video_summarization/datasets/raw_datasets/TVsum/ydata-tvsum50-v1_1/matlab/ydata-tvsum50.mat --dataset tvsum > tvsum.log &
+
+summe
+bash> N_CUDA=3 nohup python3 generate_dataset.py --videospath /data/shuaman/video_summarization/datasets/raw_datasets/SumMe/videos/ --groundtruthpath /data/shuaman/video_summarization/datasets/raw_datasets/SumMe/GT/ --dataset summe > summe.log &
+
+ovp
+bash> N_CUDA=3 nohup python3 generate_dataset.py --videospath /data/shuaman/video_summarization/datasets/raw_datasets/VSUMM/database/ --groundtruthpath /data/shuaman/video_summarization/datasets/raw_datasets/VSUMM/UserSummary/ --dataset ovp > ovp.log &
+
+
+youtube
+bash> N_CUDA=3 nohup python3 generate_dataset.py --videospath /data/shuaman/video_summarization/datasets/raw_datasets/VSUMM/new_database/ --groundtruthpath /data/shuaman/video_summarization/datasets/raw_datasets/VSUMM/newUserSummary/ --dataset youtube > youtube.log &
+
+
+https://stackoverflow.com/questions/49467245/how-can-i-redirect-nohup-output-to-a-specified-file
+
+normal training:
+python3 train.py -params parameters_stev.json
+
+normal training cross val:
+N_CUDA=3 nohup python3 train_cross_val.py --wandb --params configs/config_tvsum_1024.json &
+
+SWEEPS:
+LANZADOS:
+//summe canonical 
+N_CUDA=2 nohup wandb agent --count 65 stevramos/sports_video_summarization/vybq3tzi > sweepsumme.log &
+//tvsum canonical
+N_CUDA=3 nohup wandb agent --count 70 stevramos/sports_video_summarization/9eh6xyua > sweeptvsum.log &
+//summe canonical pretrained
+N_CUDA=2 nohup wandb agent --count 70 stevramos/sports_video_summarization/cenmuixi > sweepsumme_pt.log &
+//tvsum canonical pretrained
+N_CUDA=3 nohup wandb agent --count 70 stevramos/sports_video_summarization/w63bf0wv > sweeptvsum_pt.log &
+
+EN PROCESO:
+//summe augmented
+N_CUDA=2 nohup wandb agent --count 70 stevramos/sports_video_summarization/0am5e7k2 > sweepsummeaug.log &
+//tvsum augmented
+N_CUDA=3 nohup wandb agent --count 70 stevramos/sports_video_summarization/amq99kbi > sweeptvsumaug.log &
+
+NO LANZADOS:
+//SUMME CANONICAL L2NORM
+N_CUDA=2 nohup wandb agent --count 70 stevramos/sports_video_summarization/i4tp8xbj > sweepsumme_l2norm.log &
+
+//TVSUM CANONICAL L2NORM
+N_CUDA=3 nohup wandb agent --count 70 stevramos/sports_video_summarization/4f4vke2c > sweeptvsum_l2norm.log &
+
+//SUMME NOV RAND L2NORM
+N_CUDA=2 nohup wandb agent --count 70 stevramos/sports_video_summarization/0dih9592 > sweepsumme_l2norm_novrand.log &
+
+//TVSUM NOV RAND L2NORM
+N_CUDA=3 nohup wandb agent --count 70 stevramos/sports_video_summarization/85vz5g4k > sweeptvsum_l2norm_novrand.log &
+
+
+//summe training 
+N_CUDA=2 nohup wandb agent --count 70 stevramos/sports_video_summarization/ko7iih9w > sweep_summel2norn_new1.log &
+//tvsum training 
+N_CUDA=3 nohup wandb agent --count 70 stevramos/sports_video_summarization/6pe42jgk > sweep_tvsuml2norm_new1.log &
+
+
+//summe training 2048
+N_CUDA=2 nohup wandb agent --count 70 stevramos/sports_video_summarization/ov4m1gcc > sweep_summe_2048.log &
+//tvsum training 2048
+N_CUDA=3 nohup wandb agent --count 70 stevramos/sports_video_summarization/xkoe17r1 > sweep_tvsum_2048.log &
+
+
+
+//summe augmented pretrained
+N_CUDA=2 nohup wandb agent --count 70 stevramos/sports_video_summarization/zg1a6mwp > sweepsummeaug_pt.log &
+//tvsum augmented pretrained
+N_CUDA=3 nohup wandb agent --count 70 stevramos/sports_video_summarization/yhn1k4qj > sweeptvsumaug_pt.log &
+
+- --pretrained_model
+- pretrained_models/tvsum_random_non_overlap_0.6271.tar.pth
+
+
+
+
+#metricas finales
+summe original:
+ - canonical: 0.51
+ - nov ord: 0.47
+ - nov rand: 0.48
+ 
+tvsum original 
+ - canonical: 0.6001
+ - nov ord: 0.596
+ - nov rand: 0.5942
+ 
+ 
+ 
+ 2. GN-RNT-IV3-RGB
+ 
+ 1. GN-RNT-FLOW-R3D
+
+
+
