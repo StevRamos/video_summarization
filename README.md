@@ -38,7 +38,7 @@ In order to experiment with pretrained models, it is necessary to download [them
 
 ## <strong>Dataset</strong>
 
-To download the raw dataset (SumMe, TVSum, VSumm, CoSum, and Visiocity), I used the gshell library. It can be downloaded from pip. Since it has 16GB I recommend using it. Run the following command to get the preprocessed dataset.
+To download the raw dataset ([SumMe](https://gyglim.github.io/me/vsum/index.html), [TVSum](https://github.com/yalesong/tvsum), [VSumm](https://www.sites.google.com/site/vsummsite/), [CoSum](https://github.com/l2ior/cosum), and [Visiocity](https://visiocity.github.io/)), I used the gshell library. It can be downloaded from pip. Since it has 16GB I recommend using it. Run the following command to get the preprocessed dataset.
 
 ```bash
 ./scripts/downloadDataset.sh`
