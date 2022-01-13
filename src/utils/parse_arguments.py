@@ -28,6 +28,12 @@ def parse_arguments_generate_dataset():
     ap.add_argument('-ds', '--dataset', required=True, type=str,
                     help="dataset name: summe, tvsum, youtube, ovp or cosum")
 
+    ap.add_argument('-wfp', '--pathweightsflow', required=True, type=str,
+                    help="path where weights flow are located")
+    ap.add_argument('-wrgbp', '--pathweightsrgb', required=True, type=str,
+                    help="path where weights rgb are located")
+    ap.add_argument('-wr3dp', '--pahtweightsr3d101KM', required=True, type=str,
+                    help="path where weights r3d101km are located")
     args = ap.parse_args()
 
     return args

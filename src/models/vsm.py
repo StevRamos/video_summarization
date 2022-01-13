@@ -66,10 +66,10 @@ class VideoSumarizer():
         return video_models
 
     def load_weights_descriptor_models(self, 
-                                       weights_path="/home/shuaman/video_sm/video_summarization/pretrained_models/tvsum_random_non_overlap_0.6271.tar.pth", 
-                                       path_weights_flow="/data/shuaman/video_summarization/datasets/pytorch-i3d/models/flow_imagenet.pt",
-                                       paht_weights_r3d101_KM="/data/shuaman/video_summarization/datasets/3D-ResNets-PyTorch/weights/r3d101_KM_200ep.pth",
-                                       transformations_path="/data/shuaman/video_summarization/datasets/processed_datasets/transformations.pk"
+                                       weights_path="/data/shuaman/video_summarization/weights_model/tvsum_random_non_overlap_0.6271.tar.pth", 
+                                       path_weights_flow="/data/shuaman/video_summarization/weights_model/flow_imagenet.pt",
+                                       paht_weights_r3d101_KM="/data/shuaman/video_summarization/weights_model/r3d101_KM_200ep.pth",
+                                       transformations_path="/data/shuaman/video_summarization/weights_model/transformations.pk"
                                        ):
         self.load_weights(weights_path)
         self.image_models = self._get_model_frame_feature(resnet=self.config.resnext, inception=self.config.inceptionv3, googlenet=self.config.googlenet)

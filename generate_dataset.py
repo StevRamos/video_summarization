@@ -19,10 +19,10 @@ import scipy.io
 import pandas as pd
 import torch
 
-from models.CNN import ResNet, GoogleNet, Inception
-from models.CNN3D import I3D, ResNet3D
-from KTS.cpd_auto import cpd_auto
-from utils.parse_arguments import parse_arguments_generate_dataset
+from src.models.CNN import ResNet, GoogleNet, Inception
+from src.models.CNN3D import I3D, ResNet3D
+from src.KTS.cpd_auto import cpd_auto
+from src.utils.parse_arguments import parse_arguments_generate_dataset
 
 def array_to_id(number_array):
     number_array = number_array.squeeze()
@@ -60,6 +60,10 @@ class Generate_Dataset:
         self.video_list = []
         self.video_path = ''
         self.frame_root_path = './frames'
+
+        if not os.path.exists(self.frame_root_path):
+            os.mkdir(self.frame_root_path)
+
         self.h5_file = h5py.File(save_path, 'w')
         self.gt_list = []
         self.gt_path = ''
@@ -356,38 +360,27 @@ class Generate_Dataset:
         if self.dataset=='tvsum':
             self.gt_path.close()
 
-if __name__ == "__main__":
-    #gen = Generate_Dataset('/data/shuaman/video_summarization/datasets/raw_datasets/SumMe/videos/Air_Force_One.mp4', 
-    #                        '/data/shuaman/video_summarization/datasets/raw_datasets/SumMe/GT/Air_Force_One.mat',
-    #                        'Air_Force_One.h5')
-
-    #gen = Generate_Dataset('/data/shuaman/video_summarization/datasets/raw_datasets/TVsum/ydata-tvsum50-v1_1/video/', 
-     #                      '/data/shuaman/video_summarization/datasets/raw_datasets/TVsum/ydata-tvsum50-v1_1/matlab/ydata-tvsum50.mat',
-      #                      'eccv16_dataset_tvsum_google_pool5.h5', dataset='tvsum')
-
-    #gen = Generate_Dataset('/data/shuaman/video_summarization/datasets/raw_datasets/VSUMM/new_database/', 
-     #                       '/data/shuaman/video_summarization/datasets/raw_datasets/VSUMM/newUserSummary/',
-      #                          'eccv16_dataset_youtube_google_pool5.h5', dataset='youtube')
-    '''
-    gen = Generate_Dataset('/data/shuaman/video_summarization/datasets/raw_datasets/VSUMM/database/', 
-                            '/data/shuaman/video_summarization/datasets/raw_datasets/VSUMM/UserSummary/',
-                                'eccv16_dataset_ovp_google_pool5.h5', dataset='ovp')
-    '''
-
-    #gen = Generate_Dataset('/data/shuaman/video_summarization/datasets/raw_datasets/CoSum/videos/', 
-     #                       '/data/shuaman/video_summarization/datasets/raw_datasets/CoSum/',
-      #                          'eccv16_dataset_cosum_google_pool5_i3d.h5', dataset='cosum')
-    
+if __name__ == "__main__":  
     args = parse_arguments_generate_dataset()
     videos_path = args.videospath
     groundtruth_path = args.groundtruthpath
     outputname = f'dataset_{args.dataset}_processed.h5'
+    
+    path_weights_flow = args.pathweightsflow
+    path_weights_rgb = args.pathweightsrgb
+    paht_weights_r3d101_KM = args.pahtweightsr3d101KM 
 
     if args.dataset not in ('summe', 'tvsum', 'ovp', 'youtube', 'cosum'):
         print("This dataset is not supported for this process")
         sys.exit(0)
 
-    gen = Generate_Dataset(videos_path, groundtruth_path, outputname, args.dataset)
+    gen = Generate_Dataset(video_path=videos_path, 
+                            path_ground_truth=groundtruth_path, 
+                            save_path=outputname, 
+                            dataset=args.dataset,
+                            path_weights_flow=path_weights_flow,
+                            path_weights_rgb=path_weights_rgb,
+                            paht_weights_r3d101_KM=paht_weights_r3d101_KM)
 
     gen.generate_dataset()
     gen.h5_file.close()
