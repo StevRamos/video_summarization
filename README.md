@@ -140,8 +140,8 @@ I trained the MSVA model with original features
 * F1 Score SumMe: <strong>0.476</strong>
 * F1 Score TVSum: <strong>0.594</strong>
 <div align="center">
-  <img width="400" alt="Kinetic-GAN Illustration" src="img/summe_baselinemodel.jpg">
-  <img width="400" alt="Kinetic-GAN Illustration" src="img/tvsum_baselinemodel.jpg">
+  <img width="400" alt="summe baseline model" src="img/summe_baselinemodel.jpg">
+  <img width="400" alt="tvsum baseline model" src="img/tvsum_baselinemodel.jpg">
 </div>
 
 #### <strong>Grid Search</strong>
@@ -151,8 +151,8 @@ To train the model, run the following code:
 
 
 <div align="center">
-  <img width="400" alt="Kinetic-GAN Illustration" src="img/summe_feature_influence.jpg">
-  <img width="400" alt="Kinetic-GAN Illustration" src="img/tvsum_feature_influence.jpg">
+  <img width="400" alt="summe feature influence" src="img/summe_feature_influence.jpg">
+  <img width="400" alt="tvsum feature influence" src="img/tvsum_feature_influence.jpg">
 </div>
 
 #### <strong>GoogleNet, ResNext, I3D FLOW and ResNet3D VS GoogleNet, I3D RGB e I3D FLOW</strong>
@@ -161,8 +161,8 @@ It can be observed that the model with the new descriptors, in both cases SumMe 
 Note: The comparison was done in one split in the images shown below.
 
 <div align="center">
-  <img width="400" alt="Kinetic-GAN Illustration" src="img/summe_f1score_onepartition.jpg">
-  <img width="400" alt="Kinetic-GAN Illustration" src="img/tvsum_f1score_onepartition.jpg">
+  <img width="400" alt="summe f1score one partition" src="img/summe_f1score_onepartition.jpg">
+  <img width="400" alt="tvsum f1score one partition" src="img/tvsum_f1score_onepartition.jpg">
 </div>
 
 Comparison of F1-Score with the baseline model under Canonical, Augmented and Transfer settings.
